@@ -1,0 +1,47 @@
+
+services:
+  # 1. Baza Danych (MySQL)
+  db:
+    image: mysql:8.0
+    container_name: karaoke_mysql_db
+    environment:
+      # WAŻNE: Wpisz te same dane do pliku application.properties Spring Boota!
+      MYSQL_ROOT_PASSWORD: my-secret-pw 
+      MYSQL_DATABASE: karaokedb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - db-data:/var/lib/mysql
+    ports:
+    - "3307:3306"
+
+  # 2. Backend (Spring Boot)
+  backend:
+    build: 
+      context: ./backend # Instrukcje budowania są w folderze backend/
+    container_name: karaoke_backend_api
+    ports:
+      - "8080:8080" # Mapowanie portu dla API
+    environment:
+      # Adres bazy danych to nazwa usługi Dockera: 'db'
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/karaokedb
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+    depends_on:
+      - db # Upewnienie się, że DB startuje przed Backendem
+
+  # 3. Frontend (Vue)
+  frontend:
+    build:
+      context: ./frontend # Instrukcje budowania są w folderze frontend/
+    container_name: karaoke_frontend_app
+    ports:
+      - "80:80" # Mapowanie portu dla strony internetowej
+    environment:
+      # Wskazanie frontu na adres backendu w sieci Dockera: 'backend'
+      VITE_APP_API_URL: http://backend:8080 
+    depends_on:
+      - backend
+
+volumes:
+  db-data: # Definicja wolumenu do trwałego przechowywania danych DB
