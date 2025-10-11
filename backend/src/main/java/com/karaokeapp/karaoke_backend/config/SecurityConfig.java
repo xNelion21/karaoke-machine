@@ -1,7 +1,6 @@
 package com.karaokeapp.karaoke_backend.config;
 
 import com.karaokeapp.karaoke_backend.security.JwtAuthenticationFilter;
-// NIE TRZEBA WSTRZYKIWAĆ CustomUserDetailsService, BO SECURITY GO ZNAJDZIE
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
