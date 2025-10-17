@@ -27,9 +27,16 @@
             <p class="lead mt-4 mb-5 hero-subtitle">
               Śpiewaj ulubione utwory z tekstem zsynchronizowanym w idealnym momencie. Dołącz do społeczności pasjonatów muzyki.
             </p>
-            <router-link to="/register" class="btn btn-primary btn-lg cta-button">
-              Dołącz za darmo
-            </router-link>
+            <div class="d-flex justify-content-center gap-3">
+              <router-link to="/register" class="btn btn-primary btn-lg cta-button">
+                Dołącz za darmo
+              </router-link>
+              <!-- Tymczasowy przycisk do nowej strony -->
+              <router-link to="/app" class="btn btn-outline-light btn-lg">
+                Sprawdź aplikację
+                (tymczasowy przysisk)
+              </router-link>
+            </div>
           </div>
         </div>
       </div>
