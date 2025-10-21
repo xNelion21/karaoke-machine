@@ -1,14 +1,30 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import LoginView from "@/views/LoginView.vue";
+import RegisterView from "@/views/RegisterView.vue";
 
-const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
+  const routes = [
     {
       path: '/',
       name: 'home',
       component: HomeView,
+      meta: {title : 'Strona główna'}
     },
+
+    {
+        path: '/login',
+        name: 'login',
+        component: LoginView,
+        meta: { title: 'Zaloguj się' }
+    },
+
+    {
+      path: '/register',
+      name: 'register',
+      component: RegisterView,
+      meta: { title: 'Zarejestruj się' }
+    },
+
     {
       path: '/about',
       name: 'about',
@@ -17,7 +33,15 @@ const router = createRouter({
       // which is lazy-loaded when the route is visited.
       component: () => import('../views/AboutView.vue'),
     },
-  ],
+  ];
+
+const router = createRouter({
+    history: createWebHistory(import.meta.env.BASE_URL),
+    routes
 })
+
+router.afterEach((to, from) => {
+    document.title = `${to.meta.title} | Singly` || 'Singly';
+});
 
 export default router
