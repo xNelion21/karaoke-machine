@@ -3,6 +3,7 @@ package com.karaokeapp.karaoke_backend.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.Getter;
 
 import java.util.Set;
 
@@ -20,13 +21,11 @@ public class SongRequestDTO {
     private String genre;
     private String lyrics;
 
+    @Getter
     private Set<Long> categoryIds;
 
     public Set<Long> getAuthorIds() {
         return authorsIds;
     }
 
-    public Set<Long> getCategoryIds() {
-        return categoryIds;
-    }
 }
