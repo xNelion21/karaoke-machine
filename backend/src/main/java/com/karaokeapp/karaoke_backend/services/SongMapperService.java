@@ -2,11 +2,26 @@ package com.karaokeapp.karaoke_backend.services; // Lub .mappers
 
 import com.karaokeapp.karaoke_backend.dto.SongRequestDTO;
 import com.karaokeapp.karaoke_backend.dto.SongResponseDTO;
+import com.karaokeapp.karaoke_backend.models.Author;
 import com.karaokeapp.karaoke_backend.models.Song; // Encja Song (założenie, że Marcin ją stworzył)
+import com.karaokeapp.karaoke_backend.models.Category;
+import com.karaokeapp.karaoke_backend.repositories.AuthorRepository;
+import com.karaokeapp.karaoke_backend.repositories.CategoryRepository;
 import org.springframework.stereotype.Service;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class SongMapperService {
+
+    private final AuthorRepository authorRepository;
+    private final CategoryRepository categoryRepository;
+
+    public SongMapperService(AuthorRepository authorRepository, CategoryRepository categoryRepository) {
+        this.authorRepository = authorRepository;
+        this.categoryRepository = categoryRepository;
+    }
 
     public Song toEntity(SongRequestDTO dto) {
         if (dto == null) {
@@ -16,7 +31,25 @@ public class SongMapperService {
         Song song = new Song();
         // ID nie ustawiamy, bo generuje je baza
         song.setTitle(dto.getTitle());
-        song.setArtist(dto.getArtist());
+
+        // Pobierz autorów po ID
+        if (dto.getAuthorIds() != null && !dto.getAuthorIds().isEmpty()) {
+            Set<Author> authors = dto.getAuthorIds().stream()
+                    .map(id -> authorRepository.findById(id)
+                            .orElseThrow(() -> new RuntimeException("Autor o ID " + id + " nie istnieje")))
+                    .collect(Collectors.toSet());
+            song.setAuthors(authors);
+        }
+
+        // Pobierz kategorie po ID
+        if (dto.getCategoryIds() != null && !dto.getCategoryIds().isEmpty()) {
+            Set<Category> categories = dto.getCategoryIds().stream()
+                    .map(id -> categoryRepository.findById(id)
+                            .orElseThrow(() -> new RuntimeException("Kategoria o ID " + id + " nie istnieje")))
+                    .collect(Collectors.toSet());
+            song.setCategories(categories);
+        }
+
         song.setGenre(dto.getGenre());
         song.setLyrics(dto.getLyrics());
 
@@ -31,7 +64,22 @@ public class SongMapperService {
         SongResponseDTO dto = new SongResponseDTO();
         dto.setId(song.getId());
         dto.setTitle(song.getTitle());
-        dto.setArtist(song.getArtist());
+        // Nazwy autorów
+        if (song.getAuthors() != null) {
+            Set<String> authorNames = song.getAuthors().stream()
+                    .map(Author::getName)
+                    .collect(Collectors.toSet());
+            dto.setAuthors(authorNames);
+        }
+
+        // Nazwy kategorii
+        if (song.getCategories() != null) {
+            Set<String> categoryNames = song.getCategories().stream()
+                    .map(Category::getName)
+                    .collect(Collectors.toSet());
+            dto.setCategories(categoryNames);
+        }
+
         dto.setGenre(song.getGenre());
 
         // Nie ustawiamy 'lyrics'
@@ -46,8 +94,21 @@ public class SongMapperService {
         if (dto.getTitle() != null) {
             song.setTitle(dto.getTitle());
         }
-        if (dto.getArtist() != null) {
-            song.setArtist(dto.getArtist());
+        // Aktualizacja autorów
+        if (dto.getAuthorIds() != null) {
+            Set<Author> authors = dto.getAuthorIds().stream()
+                    .map(id -> authorRepository.findById(id)
+                            .orElseThrow(() -> new ResourceNotFoundException("Autor o ID " + id + " nie istnieje")))
+                    .collect(Collectors.toSet());
+            song.setAuthors(authors);
+        }
+        // Aktualizacja kategorii
+        if (dto.getCategoryIds() != null) {
+            Set<Category> categories = dto.getCategoryIds().stream()
+                    .map(id -> categoryRepository.findById(id)
+                            .orElseThrow(() -> new ResourceNotFoundException("Kategoria o ID " + id + " nie istnieje")))
+                    .collect(Collectors.toSet());
+            song.setCategories(categories);
         }
         if (dto.getGenre() != null) {
             song.setGenre(dto.getGenre());

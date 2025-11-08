@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.util.Set;
+
 @Data
 public class SongRequestDTO {
 
@@ -12,10 +14,19 @@ public class SongRequestDTO {
     private String title;
 
     @NotBlank(message = "Nazwa artysty jest wymagana")
-    @Size(max = 100, message = "Nazwa artysty jest za długa")
-    private String artist;
+    private Set<Long> authorsIds;
 
     @Size(max = 50, message = "Gatunek jest za długi")
     private String genre;
     private String lyrics;
+
+    private Set<Long> categoryIds;
+
+    public Set<Long> getAuthorIds() {
+        return authorsIds;
+    }
+
+    public Set<Long> getCategoryIds() {
+        return categoryIds;
+    }
 }

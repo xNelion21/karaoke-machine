@@ -59,4 +59,20 @@ public class SongController {
         songService.deleteSong(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<SongResponseDTO>> searchSongs(
+            @RequestParam String query,
+            @RequestParam(required = false) String artist,
+            @RequestParam(required = false) String genre
+    ) {
+        List<SongResponseDTO> songs = songService.searchSongs(query, artist, genre);
+        return ResponseEntity.ok(songs);
+    }
+
+    @GetMapping("/by-category/{categoryId}")
+    public ResponseEntity<List<SongResponseDTO>> getSongsByCategory(@PathVariable Long categoryId) {
+        List<SongResponseDTO> songs = songService.getSongsByCategory(categoryId);
+        return ResponseEntity.ok(songs);
+    }
 }

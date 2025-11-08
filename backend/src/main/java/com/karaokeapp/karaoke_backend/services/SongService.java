@@ -2,6 +2,7 @@ package com.karaokeapp.karaoke_backend.services;
 import com.karaokeapp.karaoke_backend.dto.SongRequestDTO;
 import com.karaokeapp.karaoke_backend.dto.SongResponseDTO;
 import com.karaokeapp.karaoke_backend.models.Song;
+import com.karaokeapp.karaoke_backend.repositories.CategoryRepository;
 import com.karaokeapp.karaoke_backend.repositories.SongRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ public class SongService {
 
     private final SongRepository songRepository;
     private final SongMapperService songMapper;
+    private final CategoryRepository categoryRepository;
 
     public SongResponseDTO createSong(SongRequestDTO requestDTO) {
         if (songRepository.existsByTitle(requestDTO.getTitle())) {
@@ -56,4 +58,39 @@ public class SongService {
         songRepository.deleteById(id);
     }
 
+    public List<SongResponseDTO> searchSongs(String query, String artist, String genre) {
+        if (query == null || query.isBlank()) {
+            return List.of();
+        }
+
+        List<Song> songs;
+
+        if (artist != null && !artist.isBlank() && genre != null && !genre.isBlank()) {
+            songs = songRepository.findByTitleContainingIgnoreCaseAndAuthors_NameContainingIgnoreCaseAndGenreIgnoreCase(query,artist, genre);
+        }
+        else if (artist != null && !artist.isBlank()) {
+            songs = songRepository.findByTitleContainingIgnoreCaseAndAuthors_NameContainingIgnoreCase(query, artist);
+        }
+        else if (genre != null && !genre.isBlank()) {
+            songs = songRepository.findByTitleContainingIgnoreCaseAndGenreContainingIgnoreCase(query, genre);
+        }
+        else {
+            songs = songRepository.findByTitleContainingIgnoreCase(query);
+        }
+
+        return songs.stream()
+                .map(songMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<SongResponseDTO> getSongsByCategory(Long categoryId) {
+        if (!categoryRepository.existsById(categoryId)){
+            throw new ResourceNotFoundException("Nie znaleziono kategorii o id: " + categoryId);
+        }
+
+        List<Song> songs = songRepository.findByCategories_Id(categoryId);
+        return songs.stream()
+                .map(songMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
     }
