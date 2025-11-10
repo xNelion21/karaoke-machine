@@ -5,9 +5,20 @@ import com.karaokeapp.karaoke_backend.models.Song;
 import com.karaokeapp.karaoke_backend.repositories.CategoryRepository;
 import com.karaokeapp.karaoke_backend.repositories.SongRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
 import java.util.List;
 import java.util.stream.Collectors;
+
+@ResponseStatus(HttpStatus.BAD_REQUEST)
+class BadRequestException extends RuntimeException {
+    public BadRequestException(String message) {
+        super(message);
+    }
+}
+
 
 
 @Service
@@ -60,7 +71,7 @@ public class SongService {
 
     public List<SongResponseDTO> searchSongs(String query, String artist, String genre) {
         if (query == null || query.isBlank()) {
-            return List.of();
+            throw new BadRequestException("Parametr wyszukiwania nie może być pusty");
         }
 
         List<Song> songs;
@@ -76,6 +87,10 @@ public class SongService {
         }
         else {
             songs = songRepository.findByTitleContainingIgnoreCase(query);
+        }
+
+        if (songs.isEmpty()) {
+            throw new ResourceNotFoundException("Nie znaleziono żadnych piosenek dla zapytania: " + query);
         }
 
         return songs.stream()
