@@ -4,29 +4,37 @@ import com.karaokeapp.karaoke_backend.models.Category;
 import com.karaokeapp.karaoke_backend.repositories.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.karaokeapp.karaoke_backend.dto.CategoryDTO;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class CategoryService {
     private final CategoryRepository categoryRepository;
+    private final CategoryMapperService categoryMapper;
 
-    public List<Category> getAllCategories() {
-        return categoryRepository.findAll();
+    public List<CategoryDTO> getAllCategories() {
+        return categoryRepository.findAll().stream()
+                .map(categoryMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
-    public Category getCategoryById(Long id) {
-        return categoryRepository.findById(id)
+    public CategoryDTO getCategoryById(Long id) {
+        Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono kategorii o ID: " + id));
+        return categoryMapper.toDTO(category);
     }
 
-    public Category createCategory(Category category){
-        if (categoryRepository.existsByNameIgnoreCase(category.getName())) {
-            throw new RuntimeException("Kategoria o nazwie '" + category.getName() + "' już istnieje.");
+    public CategoryDTO createCategory(CategoryDTO categoryDTO){
+        if (categoryRepository.existsByNameIgnoreCase(categoryDTO.getName())) {
+            throw new RuntimeException("Kategoria o nazwie '" + categoryDTO.getName() + "' już istnieje.");
         }
+        Category categoryToSave = categoryMapper.toEntity(categoryDTO);
+        Category savedCategory = categoryRepository.save(categoryToSave);
 
-        return categoryRepository.save(category);
+        return categoryMapper.toDTO(savedCategory);
     }
 
     public void deleteCategory(Long id) {
@@ -36,10 +44,12 @@ public class CategoryService {
         categoryRepository.deleteById(id);
     }
 
-    public Category updateCategory(Long id, Category category) {
-        if (!categoryRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Nie znaleziono kategorii o ID: " + id);
-        }
-        return categoryRepository.save(category);
+    public CategoryDTO updateCategory(Long id, CategoryDTO categoryDTO) {
+        Category existingCategory = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono kategorii o ID: " + id));
+
+        Category categoryToUpdate = categoryMapper.updateEntityFromDTO(existingCategory, categoryDTO);
+        Category updatedCategory = categoryRepository.save(categoryToUpdate);
+        return categoryMapper.toDTO(updatedCategory);
     }
 }

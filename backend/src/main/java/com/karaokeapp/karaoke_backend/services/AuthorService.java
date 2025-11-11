@@ -4,30 +4,38 @@ import com.karaokeapp.karaoke_backend.models.Author;
 import com.karaokeapp.karaoke_backend.repositories.AuthorRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.karaokeapp.karaoke_backend.dto.AuthorDTO;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class AuthorService {
 
     private final AuthorRepository authorRepository;
+    private final AuthorMapperService authorMapper;
 
-    public List<Author> getAllAuthors() {
-        return authorRepository.findAll();
+    public List<AuthorDTO> getAllAuthors() {
+        return authorRepository.findAll().stream()
+                .map(authorMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
-    public Author getAuthorById(Long id) {
-        return authorRepository.findById(id)
+    public AuthorDTO getAuthorById(Long id) {
+        Author author = authorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono autora o ID: " + id));
+        return authorMapper.toDTO(author);
     }
 
-    public Author createAuthor(Author author) {
-        if (authorRepository.existsByNameIgnoreCase(author.getName())) {
+    public AuthorDTO createAuthor(AuthorDTO authorDTO) {
+        if (authorRepository.existsByNameIgnoreCase(authorDTO.getName())) {
             throw new RuntimeException("Podany autor już istnieje.");
         }
+        Author authorToSave = authorMapper.toEntity(authorDTO);
+        Author savedAuthor = authorRepository.save(authorToSave);
 
-        return authorRepository.save(author);
+        return authorMapper.toDTO(savedAuthor);
     }
 
     public void deleteAuthor(Long id) {
@@ -38,10 +46,12 @@ public class AuthorService {
         authorRepository.deleteById(id);
     }
 
-    public Author updateAuthor(Long id, Author author) {
-        if (!authorRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Nie znaleziono autora o ID: " + id);
-        }
-        return authorRepository.save(author);
+    public AuthorDTO updateAuthor(Long id, AuthorDTO authorDTO) {
+        Author existingAuthor = authorRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono autora o ID: " + id));
+
+        Author authorToUpdate = authorMapper.updateEntityFromDTO(existingAuthor, authorDTO);
+        Author updatedAuthor = authorRepository.save(authorToUpdate);
+        return authorMapper.toDTO(updatedAuthor);
     }
 }

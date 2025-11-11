@@ -1,6 +1,6 @@
 package com.karaokeapp.karaoke_backend.controllers;
 
-import com.karaokeapp.karaoke_backend.models.Author;
+import com.karaokeapp.karaoke_backend.dto.AuthorDTO;
 import com.karaokeapp.karaoke_backend.services.AuthorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,20 +17,20 @@ public class AuthorController {
     private final AuthorService authorService;
 
     @GetMapping
-    public ResponseEntity<List<Author>> getAllAuthors() {
-        List<Author> authors = authorService.getAllAuthors();
+    public ResponseEntity<List<AuthorDTO>> getAllAuthors() {
+        List<AuthorDTO> authors = authorService.getAllAuthors();
         return ResponseEntity.ok(authors);
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<Author> getAuthorById(@PathVariable Long id) {
-        Author author = authorService.getAuthorById(id);
+    public ResponseEntity<AuthorDTO> getAuthorById(@PathVariable Long id) {
+        AuthorDTO author = authorService.getAuthorById(id);
         return ResponseEntity.ok(author);
     }
 
     @PostMapping
-    public ResponseEntity<Author> createAuthor(@RequestBody Author author) {
-        Author newAuthor = authorService.createAuthor(author);
+    public ResponseEntity<AuthorDTO> createAuthor(@RequestBody AuthorDTO authorDTO) {
+        AuthorDTO newAuthor = authorService.createAuthor(authorDTO);
         return new ResponseEntity<>(newAuthor, HttpStatus.CREATED);
     }
 
@@ -41,8 +41,8 @@ public class AuthorController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Author> updateAuthor(@PathVariable Long id, @RequestBody Author author) {
-        Author updatedAuthor = authorService.updateAuthor(id, author);
+    public ResponseEntity<AuthorDTO> updateAuthor(@PathVariable Long id, @RequestBody AuthorDTO authorDTO) {
+        AuthorDTO updatedAuthor = authorService.updateAuthor(id, authorDTO);
         return ResponseEntity.ok(updatedAuthor);
     }
 }
