@@ -8,14 +8,19 @@
 
       <form @submit.prevent="handleLogin">
         <div class="form-floating mb-3">
-          <input v-model="email" type="email" class="form-control" id="floatingInput" placeholder="name@example.com" required>
-          <label for="floatingInput">Adres email</label>
+          <input v-model="username" type="username" class="form-control" id="floatingInput" placeholder="name@example.com" required>
+          <label for="floatingInput">Nazwa użytkownika</label>
         </div>
         <div class="form-floating">
           <input v-model="password" type="password" class="form-control" id="floatingPassword" placeholder="Password" required>
           <label for="floatingPassword">Hasło</label>
         </div>
-
+        <div class="form-check text-start my-3">
+          <input class="form-check-input" type="checkbox" v-model="rememberMe" id="rememberMeCheckbox">
+          <label class="form-check-label" for="rememberMeCheckbox">
+            Zapamiętaj mnie
+          </label>
+        </div>
         <div v-if="errorMessage" class="alert alert-danger mt-3">{{ errorMessage }}</div>
 
         <button class="w-100 btn btn-lg btn-primary mt-4" type="submit">Zaloguj</button>
@@ -42,21 +47,35 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 
-const email = ref('')
+const username = ref('')
 const password = ref('')
+const rememberMe = ref(false)
 const errorMessage = ref('')
+const successMessage = ref('')
 const router = useRouter()
 
 const handleLogin = async () => {
   errorMessage.value = ''
+  successMessage.value = ''
+
   try {
     const response = await axios.post('http://localhost:8080/api/auth/login', {
-      email: email.value,
+      username: username.value,
       password: password.value
     });
-    localStorage.setItem('token', response.data.token);
+
+    const token = response.data.token;
+
+    if (rememberMe.value) {
+      localStorage.setItem('token', token);
+    } else {
+      sessionStorage.setItem('token', token);
+    }
+
+    router.push('/app');
+
   } catch (error) {
-    errorMessage.value = 'Nieprawidłowy email lub hasło. Spróbuj ponownie.'
+    errorMessage.value = 'Nieprawidłowy username lub hasło. Spróbuj ponownie.'
     console.error("Błąd logowania:", error);
   }
 }
