@@ -2,43 +2,56 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginView from "@/views/LoginView.vue";
 import RegisterView from "@/views/RegisterView.vue";
-
-  const routes = [
-    {
-      path: '/',
-      name: 'home',
-      component: HomeView,
-      meta: {title : 'Strona główna'}
-    },
-
-    {
-        path: '/login',
-        name: 'login',
-        component: LoginView,
-        meta: { title: 'Zaloguj się' }
-    },
-
-    {
-      path: '/register',
-      name: 'register',
-      component: RegisterView,
-      meta: { title: 'Zarejestruj się' }
-    },
-
-    {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
-    },
-  ];
+import AppView from "@/views/AppView.vue";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
-    routes
-})
+    routes: [
+        {
+            path: '/',
+            name: 'home',
+            component: HomeView,
+            meta: {title : 'Strona główna'}
+        },
+
+        {
+            path: '/login',
+            name: 'login',
+            component: LoginView,
+            meta: { title: 'Zaloguj się' }
+        },
+
+        {
+            path: '/register',
+            name: 'register',
+            component: RegisterView,
+            meta: { title: 'Zarejestruj się' }
+        },
+
+        {
+            path: '/app',
+            name: 'app',
+            component: () => import('../views/AppView.vue'),
+            meta: {
+                title: 'Twoja aplikacja Karaoke',
+                requiresAuth: true
+            }
+        },
+    ]
+});
+
+router.beforeEach((to, from, next) => {
+    const loggedIn = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (to.path === '/login' && loggedIn) {
+        next('/app');
+    }
+
+    if (to.meta.requiresAuth && !loggedIn) {
+        next('/login');
+    } else {
+        next();
+    }
+});
 
 router.afterEach((to, from) => {
     document.title = `${to.meta.title} | Singly` || 'Singly';
