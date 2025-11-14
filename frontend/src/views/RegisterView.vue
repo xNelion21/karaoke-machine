@@ -60,17 +60,15 @@ const handleRegister = async () => {
   successMessage.value = ''
 
   try {
-    await axios.post('http://localhost:8080/api/auth/register', {
+    const response = await axios.post('http://localhost:8080/api/auth/register', {
       username: username.value,
       email: email.value,
       password: password.value
     });
 
-    successMessage.value = 'Success!'
-
-    setTimeout(() => {
-      router.push('/login');
-    }, 2000);
+    const token  = response.data.token;
+    sessionStorage.setItem('token', token);
+    router.push('/app');
 
   } catch (error) {
     errorMessage.value = 'Wystąpił błąd. Nazwa użytkownika lub email mogą być już zajęte.'
