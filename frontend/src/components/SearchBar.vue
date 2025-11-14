@@ -1,54 +1,134 @@
 <template>
-  <div class="search-container mb-4">
+  <div class="search-bar">
     <input
-        v-model="searchQuery"
+        v-model="query"
+        @input="filterSongs"
         type="text"
-        class="form-control search-input"
-        placeholder="Wyszukaj piosenkę..."
+        class="form-control"
+        placeholder="Wpisz tytuł..."
     />
+
+    <ul v-if="filteredSongs.length" class="song-list mt-3">
+      <li
+          v-for="song in filteredSongs"
+          :key="song.id"
+          class="song-item"
+      >
+        <div>
+          <strong>{{ song.title }}</strong>
+          <div class="artist">{{ song.artist }}</div>
+        </div>
+        <span class="badge">{{ song.genre || "Nieznany" }}</span>
+      </li>
+    </ul>
+
+    <div v-else-if="query.length > 0" class="mt-3">
+      Brak wyników.
+    </div>
   </div>
 </template>
 
 <script setup>
-import { defineProps } from 'vue'
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
 
-const props = defineProps({
-  modelValue: String
-})
+const songs = ref([])
+const filteredSongs = ref([])
+const query = ref('')
+let debounceTimer = null
 
+function getToken() {
+  return (
+      localStorage.getItem('token') ||
+      sessionStorage.getItem('token') ||
+      null
+  )
+}
 
-const searchQuery = computed({
-  get: () => props.modelValue,
-  set: val => emit('update:modelValue', val)
-})
+async function fetchSongs() {
+  const token = getToken()
+
+  if (!token) {
+    console.warn("Brak tokena — nie pobieram piosenek")
+    return
+  }
+
+  try {
+    const res = await axios.get('http://localhost:8080/api/songs', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+
+    console.log("songs response:", res.data)
+
+    songs.value = res.data
+    filteredSongs.value = res.data
+
+  } catch (err) {
+    console.error("Błąd pobierania /api/songs:", err)
+  }
+}
+
+function filterSongs() {
+  clearTimeout(debounceTimer)
+
+  debounceTimer = setTimeout(() => {
+    const q = query.value.toLowerCase()
+
+    filteredSongs.value = songs.value.filter(song =>
+        song.title.toLowerCase().includes(q)
+    )
+  }, 200)
+}
+
+onMounted(fetchSongs)
 </script>
 
 <style scoped>
-.search-container {
-  display: flex;
-  justify-content: center;
-}
-
-.search-input {
-  color: #ffffff;
-  background-color: rgba(30,30,30,0.7);
-  border: 1px solid #6C63FF;
-  border-radius: 25px;
-  padding: 12px 20px;
+.search-bar {
   width: 100%;
   max-width: 600px;
-  font-size: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.search-input::placeholder {
+.form-control {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #555;
+  background: transparent;
+  color: #fff;
+}
+
+.form-control::placeholder {
   color: #ccc;
-  opacity: 1;
 }
 
-.search-input:focus {
-  outline: none;
-  border-color: #574feb;
-  box-shadow: 0 0 0 0.25rem rgba(108, 99, 255, 0.3);
+.song-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.song-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #444;
+}
+
+.artist {
+  font-size: 0.9em;
+  color: #aaa;
+}
+
+.badge {
+  background: #6C63FF;
+  padding: 3px 8px;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.8rem;
 }
 </style>
+
 

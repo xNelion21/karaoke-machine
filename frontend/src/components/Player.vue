@@ -82,8 +82,9 @@ const props = defineProps({
   max-width: 500px;
   border-radius: 15px;
   box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  object-fit: cover;
+  height: 350px;
 }
-
 
 @media (max-width: 992px) {
   .karaoke-layout {
@@ -95,7 +96,9 @@ const props = defineProps({
   }
   .video-player {
     max-width: 100%;
+    height: 250px;
     margin-bottom: 20px;
   }
 }
 </style>
+
