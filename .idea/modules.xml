@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/karaoke-backend.main.iml" filepath="$PROJECT_DIR$/.idea/modules/karaoke-backend.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/karaoke-backend.test.iml" filepath="$PROJECT_DIR$/.idea/modules/karaoke-backend.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/karaoke-machine.iml" filepath="$PROJECT_DIR$/.idea/karaoke-machine.iml" />
     </modules>
   </component>
