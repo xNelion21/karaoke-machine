@@ -20,12 +20,9 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapperService userMapper;
 
-    // UŻYTECZNA METODA 1: Pobieranie profilu użytkownika (GET /api/users/{id})
     public UserResponseDTO getProfile(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono użytkownika o ID: " + userId));
-
-        // Konwersja bezpiecznej encji na DTO
         return userMapper.toResponseDTO(user);
     }
 
@@ -41,6 +38,14 @@ public class UserService {
         User updatedUser = userRepository.save(user);
 
         // Zwrócenie zaktualizowanych danych jako DTO
+        return userMapper.toResponseDTO(updatedUser);
+    }
+
+    public UserResponseDTO lockUser(Long userId, boolean lockStatus) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono użytkownika o ID: " + userId));
+        user.setLocked(lockStatus);
+        User updatedUser = userRepository.save(user);
         return userMapper.toResponseDTO(updatedUser);
     }
 

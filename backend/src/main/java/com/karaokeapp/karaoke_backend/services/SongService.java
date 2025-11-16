@@ -1,11 +1,17 @@
 package com.karaokeapp.karaoke_backend.services;
 import com.karaokeapp.karaoke_backend.dto.SongRequestDTO;
 import com.karaokeapp.karaoke_backend.dto.SongResponseDTO;
+import com.karaokeapp.karaoke_backend.dto.SuggestionRequestDTO;
 import com.karaokeapp.karaoke_backend.models.Song;
+import com.karaokeapp.karaoke_backend.models.Suggestion;
+import com.karaokeapp.karaoke_backend.models.User;
 import com.karaokeapp.karaoke_backend.repositories.CategoryRepository;
 import com.karaokeapp.karaoke_backend.repositories.SongRepository;
+import com.karaokeapp.karaoke_backend.repositories.SuggestionRepository;
+import com.karaokeapp.karaoke_backend.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
@@ -28,6 +34,8 @@ public class SongService {
     private final SongRepository songRepository;
     private final SongMapperService songMapper;
     private final CategoryRepository categoryRepository;
+    private final SuggestionRepository suggestionRepository;
+    private final UserRepository userRepository;
 
     public SongResponseDTO createSong(SongRequestDTO requestDTO) {
         if (songRepository.existsByTitle(requestDTO.getTitle())) {
@@ -108,4 +116,24 @@ public class SongService {
                 .map(songMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    public void submitSuggestion(SuggestionRequestDTO dto) {
+
+        Song song = songRepository.findById(dto.getSongId())
+                .orElseThrow(() -> new ResourceNotFoundException("Piosenka o ID " + dto.getSongId() + " nie istnieje."));
+
+
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Zalogowany użytkownik nie istnieje."));
+
+
+        Suggestion suggestion = new Suggestion();
+        suggestion.setSong(song);
+        suggestion.setUser(user);
+        suggestion.setProposedContent(dto.getProposedContent());
+
+        suggestionRepository.save(suggestion);
+    }
+
     }

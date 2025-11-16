@@ -2,6 +2,7 @@ package com.karaokeapp.karaoke_backend.controllers;
 
 import com.karaokeapp.karaoke_backend.dto.SongRequestDTO;
 import com.karaokeapp.karaoke_backend.dto.SongResponseDTO;
+import com.karaokeapp.karaoke_backend.dto.SuggestionRequestDTO;
 import com.karaokeapp.karaoke_backend.services.SongService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +19,6 @@ public class SongController {
 
     private final SongService songService;
 
-    // 1. POBIERANIE LISTY PIOSENEK (GET /api/songs)
-    // Dostęp dla ROLE_USER / ROLE_ADMIN (zgodnie z SecurityConfig)
     @GetMapping
     public ResponseEntity<List<SongResponseDTO>> getAllSongs() {
         List<SongResponseDTO> songs = songService.getAllSongs();
@@ -74,5 +73,11 @@ public class SongController {
     public ResponseEntity<List<SongResponseDTO>> getSongsByCategory(@PathVariable Long categoryId) {
         List<SongResponseDTO> songs = songService.getSongsByCategory(categoryId);
         return ResponseEntity.ok(songs);
+    }
+
+    @PostMapping("/suggest")
+    public ResponseEntity<Void> submitSuggestion(@Valid @RequestBody SuggestionRequestDTO suggestionDTO) {
+        songService.submitSuggestion(suggestionDTO);
+        return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 }
