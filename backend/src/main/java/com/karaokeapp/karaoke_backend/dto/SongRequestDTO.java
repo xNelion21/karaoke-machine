@@ -1,6 +1,8 @@
 package com.karaokeapp.karaoke_backend.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.Getter;
@@ -14,8 +16,8 @@ public class SongRequestDTO {
     @Size(max = 100, message = "Tytuł piosenki jest za długi")
     private String title;
 
-    @NotBlank(message = "Nazwa artysty jest wymagana")
-    private Set<Long> authorsIds;
+    @NotEmpty(message = "Przynajmniej jeden autor musi być podany")
+    private Set<@NotNull(message = "Id autora nie może być null") Long> authorsIds;
 
     @Size(max = 50, message = "Gatunek jest za długi")
     private String genre;
