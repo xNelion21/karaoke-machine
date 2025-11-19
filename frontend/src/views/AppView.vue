@@ -4,7 +4,7 @@
 
     <div class="search-auth-row">
       <div class="search-wrapper">
-        <SearchBar />
+        <SearchBar @song-selected="handleSongSelected" />
       </div>
       <AuthStatus />
     </div>
@@ -14,17 +14,17 @@
         <aside class="left-block">
           <h2>Moja biblioteka</h2>
         </aside>
-        <section class="center-block">
-          <h2>Tekst piosenki</h2>
-          <div class="lyrics">
-            {{ currentSong.lyrics }}
-          </div>
+
+        <section class="center-block player-block">
+          <Player :song-details="currentSongDetails" />
         </section>
+
         <aside class="right-block">
-          <h2>Informacje o piosence</h2>
-          <Player :song="currentSong" />
-          <p><strong>Artysta:</strong> {{ currentSong.artist }}</p>
-          <p><strong>Tytuł:</strong> {{ currentSong.title }}</p>
+          <h2>Inne informacje</h2>
+          <div v-if="currentSongDetails" class="song-metadata">
+            <p><strong>ID Piosenki:</strong> {{ currentSongDetails.id }}</p>
+          </div>
+          <p v-else class="metadata-placeholder">Wybierz piosenkę, aby zobaczyć więcej.</p>
         </aside>
       </div>
     </main>
@@ -44,15 +44,35 @@
 </template>
 
 <script setup>
+import { ref } from "vue";
+import axios from "axios";
+
 import Navbar from '@/components/Navbar.vue'
 import AuthStatus from '@/components/AuthStatus.vue'
 import SearchBar from '@/components/SearchBar.vue'
 import Player from '@/components/Player.vue'
 
-const currentSong = {
-  title: "Przykładowa piosenka",
-  artist: "Artysta",
-  lyrics: `Tu pojawi się tekst piosenki...`
+const currentSongDetails = ref(null);
+const handleSongSelected = async (songResponseDTO) => {
+
+  const token = localStorage.getItem('token') ||
+      sessionStorage.getItem('token')
+
+  console.log("App.vue: Otrzymałem zdarzenie 'song-selected' z piosenką (SongResponseDTO):", songResponseDTO);
+  if (songResponseDTO && songResponseDTO.id) {
+    try {
+      const response = await axios.get(`http://localhost:8080/api/songs/${songResponseDTO.id}`, {
+        headers: { Authorization: `Bearer ${token}` }, }
+      );
+      currentSongDetails.value = response.data;
+      console.log("App.vue: Pobrane SongDetailsDTO:", currentSongDetails.value);
+    } catch (error) {
+      console.error("App.vue: Błąd podczas pobierania szczegółów piosenki:", error);
+      currentSongDetails.value = null;
+    }
+  } else {
+    currentSongDetails.value = null;
+  }
 }
 </script>
 
@@ -104,7 +124,7 @@ const currentSong = {
   width: 100%;
 }
 
-.left-block, .center-block, .right-block {
+.left-block, .right-block {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 1rem;
   padding: 1rem;
@@ -114,15 +134,12 @@ const currentSong = {
   align-items: center;
 }
 
-.center-block .lyrics {
-  font-size: 2rem;
-  text-align: center;
-  white-space: pre-line;
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.center-block.player-block {
+  background: transparent;
+  padding: 0;
+  display: block;
 }
+
 
 .footer {
   background: transparent;
@@ -139,13 +156,22 @@ const currentSong = {
   color: #6C63FF;
 }
 
+.song-metadata {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  color: #bbb;
+}
+.metadata-placeholder {
+  font-style: italic;
+  color: #aaa;
+  margin-top: 1rem;
+}
+
+
 @media (max-width: 992px) {
   .main-grid {
     grid-template-columns: 1fr;
     min-height: auto;
-  }
-  .center-block .lyrics {
-    font-size: 1.5rem;
   }
   .search-wrapper {
     width: 80%;
@@ -153,10 +179,3 @@ const currentSong = {
   }
 }
 </style>
-
-
-
-
-
-
-

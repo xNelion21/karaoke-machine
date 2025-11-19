@@ -64,7 +64,7 @@ const handleLogin = async () => {
       password: password.value
     });
 
-    const token = response.data.token;
+    const token = response.data.accessToken;
 
     if (rememberMe.value) {
       localStorage.setItem('token', token);

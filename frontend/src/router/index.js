@@ -24,14 +24,9 @@ const routes = [
         meta: { title: 'Zarejestruj się' }
     },
     {
-        path: '/about',
-        name: 'about',
-        component: () => import('../views/AboutView.vue')
-    },
-    {
         path: '/app',
         name: 'app',
-        component: AppView,
+        component: () => import('../views/AppView.vue'),
         meta: { title: 'Twoja aplikacja Karaoke', requiresAuth: true }
     }
 ]
@@ -43,10 +38,6 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
     const loggedIn = localStorage.getItem('token') || sessionStorage.getItem('token')
-
-    if (to.path === '/login' && loggedIn) {
-        next('/app')
-    }
 
     if (to.meta.requiresAuth && !loggedIn) {
         next('/login')

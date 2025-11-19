@@ -17,7 +17,7 @@ const username = ref(null)
 const role = ref(null)
 
 onMounted(async () => {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token')
   if (!token) return
 
   try {
