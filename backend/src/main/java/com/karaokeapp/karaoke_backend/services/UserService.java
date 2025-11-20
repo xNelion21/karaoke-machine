@@ -6,7 +6,9 @@ import com.karaokeapp.karaoke_backend.models.User;
 import com.karaokeapp.karaoke_backend.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.List;
+
 class ResourceNotFoundException extends RuntimeException {
     public ResourceNotFoundException(String message) {
         super(message);
@@ -19,6 +21,20 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapperService userMapper;
+
+
+    public List<UserResponseDTO> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(userMapper::toResponseDTO) // Konwersja każdej encji na DTO
+                .collect(Collectors.toList());
+    }
+
+    public UserResponseDTO getProfileByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Użytkownik nie znaleziony w bazie."));
+
+        return userMapper.toResponseDTO(user);
+    }
 
     public UserResponseDTO getProfile(Long userId) {
         User user = userRepository.findById(userId)

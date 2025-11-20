@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
 import java.util.List;
 
 @RestController
@@ -17,6 +18,12 @@ public class AdminController {
 
     private final UserService userService;
     private final AdminService adminService;
+
+    @GetMapping("/users")
+    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
+        List<UserResponseDTO> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
 
     @GetMapping("/suggestions/pending")
     public ResponseEntity<List<Suggestion>> getPendingSuggestions() {
