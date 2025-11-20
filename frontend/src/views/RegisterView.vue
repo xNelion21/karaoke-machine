@@ -66,9 +66,9 @@ const handleRegister = async () => {
       password: password.value
     });
 
-    const token  = response.data.token;
+    const token  = response.data.accessToken;
     sessionStorage.setItem('token', token);
-    router.push('/app');
+    router.push('/login');
 
   } catch (error) {
     errorMessage.value = 'Wystąpił błąd. Nazwa użytkownika lub email mogą być już zajęte.'

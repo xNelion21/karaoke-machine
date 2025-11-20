@@ -1,5 +1,6 @@
 package com.karaokeapp.karaoke_backend.controllers;
 
+import com.karaokeapp.karaoke_backend.dto.SongDetailsDTO;
 import com.karaokeapp.karaoke_backend.dto.SongRequestDTO;
 import com.karaokeapp.karaoke_backend.dto.SongResponseDTO;
 import com.karaokeapp.karaoke_backend.dto.SuggestionRequestDTO;
@@ -27,8 +28,8 @@ public class SongController {
 
     // 2. POBIERANIE SZCZEGÓŁÓW PIOSENKI (GET /api/songs/{id})
     @GetMapping("/{id}")
-    public ResponseEntity<SongResponseDTO> getSongById(@PathVariable Long id) {
-        SongResponseDTO song = songService.getSongById(id);
+    public ResponseEntity<SongDetailsDTO> getSongById(@PathVariable Long id) {
+        SongDetailsDTO song = songService.getSongById(id);
         return ResponseEntity.ok(song);
     }
 

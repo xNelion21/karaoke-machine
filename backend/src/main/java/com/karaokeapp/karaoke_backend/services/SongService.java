@@ -1,4 +1,5 @@
 package com.karaokeapp.karaoke_backend.services;
+import com.karaokeapp.karaoke_backend.dto.SongDetailsDTO;
 import com.karaokeapp.karaoke_backend.dto.SongRequestDTO;
 import com.karaokeapp.karaoke_backend.dto.SongResponseDTO;
 import com.karaokeapp.karaoke_backend.dto.SuggestionRequestDTO;
@@ -54,10 +55,10 @@ public class SongService {
                 .collect(Collectors.toList());
     }
 
-    public SongResponseDTO getSongById(Long id) {
+    public SongDetailsDTO getSongById(Long id) {
         Song song = songRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono piosenki o ID: " + id));
-        return songMapper.toResponseDTO(song);
+        return songMapper.toDetailsDTO(song);
     }
 
 

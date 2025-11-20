@@ -62,6 +62,7 @@ function logout() {
   background: rgba(24, 24, 24, 0.6);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 1050;
 }
 
 .navbar-brand {
