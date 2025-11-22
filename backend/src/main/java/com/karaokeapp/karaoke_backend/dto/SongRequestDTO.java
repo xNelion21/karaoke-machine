@@ -1,5 +1,6 @@
 package com.karaokeapp.karaoke_backend.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -32,6 +33,8 @@ public class SongRequestDTO {
     }
 
     private String youtubeUrl;
+
+    @Valid
     private List<LyricLineDTO> lyricLines;
 
 }

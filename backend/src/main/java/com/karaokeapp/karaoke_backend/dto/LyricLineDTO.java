@@ -1,6 +1,8 @@
 package com.karaokeapp.karaoke_backend.dto;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
@@ -11,7 +13,18 @@ public class LyricLineDTO {
     @NotBlank(message = "Linia tekstu nie może być pusta")
     private String text;
 
-    private double timeStampStart;
+    @NotNull(message = "Czas startu jest wymagany")
+    private Double timeStampStart;
 
-    private double timeStampEnd;
+    @NotNull(message = "Czas zakończenia jest wymagany")
+    private Double timeStampEnd;
+
+    @SuppressWarnings("unused")
+    @AssertTrue(message = "Czas zakończenia musi być późniejszy niż czas rozpoczęcia")
+    public boolean isTimeValid(){
+        if(timeStampStart == null || timeStampEnd == null){
+            return true;
+        }
+        return timeStampStart >= timeStampEnd;
+    }
 }
