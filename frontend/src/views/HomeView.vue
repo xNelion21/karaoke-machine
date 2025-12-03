@@ -1,11 +1,11 @@
 <template>
-  <div class="landing-page">
+  <div class="landing-page d-flex flex-column min-vh-100 text-white">
     <Navbar />
 
-    <main class="hero-section text-white text-center">
+    <main class="hero-section flex-grow-1 d-flex align-items-center justify-content-center py-5 py-lg-6">
       <div class="container">
         <div class="row justify-content-center">
-          <div class="col-md-9">
+          <div class="col-md-9 text-center">
             <h1 class="display-2 fw-bold hero-title">
               Twoja scena. Twoje słowa. Twój głos.
             </h1>
@@ -15,20 +15,23 @@
             <router-link v-if="!loggedIn" to="/register" class="btn btn-primary btn-lg cta-button">
               Dołącz za darmo
             </router-link>
+            <router-link v-else to="/app" class="btn btn-primary btn-lg cta-button">
+              Zacznij śpiewac!
+            </router-link>
           </div>
         </div>
       </div>
     </main>
 
     <footer class="footer d-flex flex-wrap justify-content-between align-items-center py-3 px-4">
-      <div class="col-md-4 d-flex align-items-center">
+      <div class="col-md-4 d-flex align-items-center ">
         <span class="mb-3 mb-md-0 fw-bold">© 2025 Singly</span>
       </div>
 
       <ul class="nav col-md-4 justify-content-end list-unstyled d-flex">
-        <li class="ms-3"><a href="https://x.com" target="_blank"><i class="bi bi-twitter-x"></i></a></li>
-        <li class="ms-3"><a href="https://instagram.com" target="_blank"><i class="bi bi-instagram"></i></a></li>
-        <li class="ms-3"><a href="https://facebook.com" target="_blank"><i class="bi bi-facebook"></i></a></li>
+        <li class="ms-3"><a href="https://x.com" target="_blank" class=""><i class="bi bi-twitter-x"></i></a></li>
+        <li class="ms-3"><a href="https://instagram.com" target="_blank" class=""><i class="bi bi-instagram"></i></a></li>
+        <li class="ms-3"><a href="https://facebook.com" target="_blank" class=""><i class="bi bi-facebook"></i></a></li>
       </ul>
     </footer>
   </div>
@@ -37,9 +40,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import Navbar from '@/components/Navbar.vue'
-import AuthStatus from '@/components/AuthStatus.vue'
-import SearchBar from '@/components/SearchBar.vue'
-import Player from '@/components/Player.vue'
 
 const loggedIn = ref(false)
 
@@ -48,31 +48,14 @@ onMounted(() => {
   loggedIn.value = !!token
 })
 
-const currentSong = {
-  title: "Przykładowa piosenka",
-  artist: "Artysta",
-  lyrics: `Tu pojawi się tekst piosenki...`
-}
 </script>
 
 <style scoped>
 .landing-page {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  color: #fff;
   background: linear-gradient(135deg, #181818 0%, #121020 100%);
   font-family: 'Arial', sans-serif;
   overflow-x: hidden;
   position: relative;
-}
-
-.hero-section {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-grow: 1;
-  padding: 120px 0;
 }
 
 .hero-title {
@@ -85,7 +68,6 @@ const currentSong = {
 
 .hero-subtitle {
   color: #aab2c2;
-  font-size: 1.5rem;
 }
 
 .btn-primary {

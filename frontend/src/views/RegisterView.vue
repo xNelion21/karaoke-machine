@@ -42,37 +42,30 @@
     </div>
   </div>
 </template>
-
 <script setup>
+
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import {useAuthStore} from "@/stores/auth.js";
+import {storeToRefs} from "pinia";
 
 const username = ref('')
 const email = ref('')
 const password = ref('')
-const errorMessage = ref('')
-const successMessage = ref('')
 const router = useRouter()
+const authStore = useAuthStore()
+
+const { errorMessage } = storeToRefs(authStore)
 
 const handleRegister = async () => {
-  errorMessage.value = ''
-  successMessage.value = ''
+  const success = await authStore.register({
+    username: username.value,
+    email: email.value,
+    password: password.value,
+  })
 
-  try {
-    const response = await axios.post('http://localhost:8080/api/auth/register', {
-      username: username.value,
-      email: email.value,
-      password: password.value
-    });
-
-    const token  = response.data.accessToken;
-    sessionStorage.setItem('token', token);
-    router.push('/login');
-
-  } catch (error) {
-    errorMessage.value = 'Wystąpił błąd. Nazwa użytkownika lub email mogą być już zajęte.'
-    console.error("Błąd rejestracji:", error);
+  if (success) {
+    router.push('/login')
   }
 }
 
@@ -84,6 +77,7 @@ const handleFacebookLogin = () => {
 </script>
 
 <style scoped>
+/* UJEDNOLICONE STYLE DLA FORMULARZY AUTORYZACJI (identyczne jak w Login.vue) */
 .auth-container {
   display: flex;
   align-items: center;
@@ -135,7 +129,6 @@ const handleFacebookLogin = () => {
   color: white;
   border-radius: 8px;
   transition: all 0.3s ease-in-out;
-
   box-shadow: 0 4px 15px rgba(108, 99, 255, 0.3);
 }
 
