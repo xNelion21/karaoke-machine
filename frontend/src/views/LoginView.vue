@@ -8,7 +8,7 @@
 
       <form @submit.prevent="handleLogin">
         <div class="form-floating mb-3">
-          <input v-model="username" type="username" class="form-control" id="floatingInput" placeholder="name@example.com" required>
+          <input v-model="username" type="text" class="form-control" id="floatingInput" placeholder="name@example.com" required>
           <label for="floatingInput">Nazwa użytkownika</label>
         </div>
         <div class="form-floating">
@@ -45,38 +45,25 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import {useAuthStore} from "@/stores/auth.js";
+import {storeToRefs} from "pinia";
 
 const username = ref('')
 const password = ref('')
 const rememberMe = ref(false)
-const errorMessage = ref('')
-const successMessage = ref('')
 const router = useRouter()
+const authStore = useAuthStore()
+
+const { errorMessage } = storeToRefs(authStore)
 
 const handleLogin = async () => {
-  errorMessage.value = ''
-  successMessage.value = ''
+  const success = await authStore.login({
+    username: username.value,
+    password: password.value
+  }, rememberMe.value);
 
-  try {
-    const response = await axios.post('http://localhost:8080/api/auth/login', {
-      username: username.value,
-      password: password.value
-    });
-
-    const token = response.data.accessToken;
-
-    if (rememberMe.value) {
-      localStorage.setItem('token', token);
-    } else {
-      sessionStorage.setItem('token', token);
-    }
-
+  if (success) {
     router.push('/app');
-
-  } catch (error) {
-    errorMessage.value = 'Nieprawidłowy username lub hasło. Spróbuj ponownie.'
-    console.error("Błąd logowania:", error);
   }
 }
 
@@ -138,7 +125,6 @@ const handleFacebookLogin = () => {
   color: white;
   border-radius: 8px;
   transition: all 0.3s ease-in-out;
-
   box-shadow: 0 4px 15px rgba(108, 99, 255, 0.3);
 }
 
@@ -157,7 +143,6 @@ const handleFacebookLogin = () => {
 .auth-card a:hover {
   text-decoration: underline;
 }
-
 
 .divider {
   display: flex;

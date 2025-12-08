@@ -2,13 +2,30 @@
   <div v-if="songDetails" class="karaoke-player-container">
     <div class="header-info">
       <h3>{{ songDetails.song?.title || songDetails.title }}</h3>
+
+      <button
+          class="btn-favorite ms-3"
+          @click="handleToggleFavorite"
+          :class="{ 'is-favorite': isFav }"
+          aria-label="Dodaj do ulubionych"
+      >
+        <i :class="isFav ? 'bi bi-heart-fill' : 'bi bi-heart'"></i>
+      </button>
+
       <div class="meta-tags">
         <span v-if="songDetails.song?.authors || songDetails.authors" class="tag artist">
           <i class="bi bi-mic-fill"></i> {{ (songDetails.song?.authors || songDetails.authors || []).join(', ') }}
         </span>
-        <span v-if="songDetails.song?.genre || songDetails.genre" class="tag genre">
-          <i class="bi bi-music-note-beamed"></i> {{ songDetails.song?.genre || songDetails.genre }}
-        </span>
+
+        <template v-if="songDetails.song?.categories || songDetails.categories">
+          <span
+              v-for="(category, index) in (songDetails.song?.categories || songDetails.categories)"
+              :key="index"
+              class="tag category"
+          >
+          <i class="bi bi-music-note-beamed"></i> {{ category }}
+          </span>
+        </template>
       </div>
     </div>
 
@@ -31,7 +48,7 @@
                 'line': true,
                 'active': activeLineIndex === index,
                 'past': index < activeLineIndex,
-                'future': index > activeLineIndex && index > (activeLineIndex + linesToShowBeforeAndAfter) // Pokazujemy tylko kilka przyszłych
+                'future': index > activeLineIndex && index > (activeLineIndex + linesToShowBeforeAndAfter)
               }"
               @click="seekTo(line.timeStampStart)"
               :ref="el => { if (activeLineIndex === index) activeLineRef = el }"
@@ -64,6 +81,9 @@
 
 <script setup>
 import { ref, computed, watch, onUnmounted, nextTick } from 'vue';
+import { useFavoritesStore } from '@/stores/favorites';
+
+const emit = defineEmits(['favorite-toggled']);
 
 const props = defineProps({
   songDetails: {
@@ -72,14 +92,32 @@ const props = defineProps({
   },
 });
 
-const linesToShowBeforeAndAfter = 1;
+const favoritesStore = useFavoritesStore();
 
+const linesToShowBeforeAndAfter = 1;
 const player = ref(null);
 const currentTime = ref(0);
 const youtubeTarget = ref(null);
 const teleprompterRef = ref(null);
 const activeLineRef = ref(null);
 let playbackInterval = null;
+
+const currentSongId = computed(() => {
+  return props.songDetails?.id || props.songDetails?.song?.id;
+});
+
+const isFav = computed(() => {
+  if (!currentSongId.value) return false;
+  return favoritesStore.isFavorite(currentSongId.value);
+});
+
+function handleToggleFavorite() {
+  if (currentSongId.value) {
+    favoritesStore.toggleFavorite(currentSongId.value);
+    emit('favorite-toggled');
+  }
+}
+
 const sortedLyricLines = computed(() => {
   const lines = props.songDetails?.lyricLines || props.songDetails?.song?.lyricLines;
   if (lines) {
@@ -111,10 +149,7 @@ const activeLineIndex = computed(() => {
 
 const scrollToActiveLine = (behavior = 'smooth') => {
   if (activeLineRef.value && teleprompterRef.value) {
-    const container = teleprompterRef.value;
-    const element = activeLineRef.value;
-
-    element.scrollIntoView({
+    activeLineRef.value.scrollIntoView({
       behavior: behavior,
       block: 'center'
     });
@@ -201,10 +236,6 @@ const initPlayer = async () => {
   });
 };
 
-const isLineHighlighted = (line) => {
-  return currentTime.value >= line.timeStampStart && currentTime.value < line.timeStampEnd;
-};
-
 const seekTo = (time) => {
   if (player.value && typeof player.value.seekTo === 'function') {
     player.value.seekTo(time, true);
@@ -236,7 +267,6 @@ watch(() => props.songDetails, async (newVal) => {
   }
 }, { immediate: true });
 
-
 onUnmounted(() => {
   stopPlaybackTimer();
   if (player.value) {
@@ -253,7 +283,6 @@ onUnmounted(() => {
 }
 
 body {
-  margin: 0;
   font-family: 'Poppins', sans-serif;
   background-color: #1a1a2e;
   color: #e0e0e0;
@@ -270,7 +299,6 @@ body {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.05);
   max-width: 1000px;
-  margin: 20px auto;
 }
 
 .header-info {
@@ -308,7 +336,7 @@ body {
 }
 
 .tag.artist { color: #8a7aff; background: rgba(138, 122, 255, 0.15); }
-.tag.genre { color: #ff85a2; background: rgba(255, 133, 162, 0.15); }
+.tag.category { color: #ff85a2; background: rgba(255, 133, 162, 0.15); }
 
 .video-player-wrapper {
   width: 100%;
@@ -490,6 +518,35 @@ body {
   animation: spin 6s linear infinite;
   opacity: 0.4;
   color: #6C63FF;
+}
+.btn-favorite {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.8rem;
+  padding: 0;
+  color: #aab2c2;
+  transition: color 0.3s, transform 0.2s;
+}
+
+.btn-favorite:hover {
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.btn-favorite.is-favorite {
+  color: #FF6584;
+  animation: favorite-pop 0.3s ease-out;
+}
+
+.btn-favorite.is-favorite i {
+  filter: drop-shadow(0 0 5px rgba(255, 101, 132, 0.7));
+}
+
+@keyframes favorite-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1.1); }
 }
 
 @keyframes spin { 100% { transform: rotate(360deg); } }

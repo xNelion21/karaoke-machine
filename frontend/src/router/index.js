@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginView from "@/views/LoginView.vue";
 import RegisterView from "@/views/RegisterView.vue";
-import AppView from '@/views/AppView.vue'
+import {useAuthStore} from "@/stores/auth.js";
 
 const routes = [
     {
@@ -37,9 +37,9 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-    const loggedIn = localStorage.getItem('token') || sessionStorage.getItem('token')
+   const authStore = useAuthStore();
 
-    if (to.meta.requiresAuth && !loggedIn) {
+    if (to.meta.requiresAuth && (!authStore.isAuthenticated)) {
         next('/login')
     } else {
         next()
