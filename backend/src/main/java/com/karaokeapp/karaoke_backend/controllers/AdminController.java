@@ -40,6 +40,7 @@ public class AdminController {
         return ResponseEntity.ok(updatedUser);
     }
 
+    //xzrobic endpoint do zmiany roli z panelu admina i sprawdzic blokowanie
     @PutMapping("/suggestions/{id}/status")
     public ResponseEntity<Void> processSuggestion(
             @PathVariable Long id,

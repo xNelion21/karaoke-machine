@@ -6,8 +6,10 @@ import com.karaokeapp.karaoke_backend.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+
 
 @RestController
 @RequestMapping("/api/users")
@@ -33,4 +35,20 @@ public class UserController {
     }
 
     // ... Dalsze endpointy - zmiany hasla i inne cuda
+
+    //polubione
+    @PostMapping("/me/likes/{songId}")
+    public ResponseEntity<Void> addLikedSong(@PathVariable Long songId) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        userService.addLikedSong(username, songId);
+        return ResponseEntity.ok().build();
+    }
+    @DeleteMapping("/me/likes/{songId}")
+    public ResponseEntity<Void> removeLikedSong(@PathVariable Long songId) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        userService.removeLikedSong(username, songId);
+        return ResponseEntity.ok().build();
+    }
+
+
 }

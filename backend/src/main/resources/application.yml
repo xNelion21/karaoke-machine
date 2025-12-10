@@ -1,0 +1,22 @@
+app:
+  frontend:
+    url: http://localhost:5173
+
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+
+
+          facebook:
+             #nie moge podac
+              - email
+              - public_profile
+
+application:
+  security:
+    jwt:
+      secret-key:
+      expiration:
