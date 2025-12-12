@@ -23,19 +23,29 @@
                :aria-expanded="isProfileDropdownOpen ? 'true' : 'false'">
               <i class="bi bi-person-circle fs-4 me-2"></i>
             </a>
-            <ul class="dropdown-menu dropdown-menu-end" :class="{ show: isProfileDropdownOpen }" aria-labelledby="profileDropdown">
-
+            <ul class="dropdown-menu dropdown-menu-end" :class="{ show: isProfileDropdownOpen }">
               <li>
                 <span class="dropdown-item-text fw-bold">Zalogowany jako: </span>
-                <span class="dropdown-item-text fw-bold text-primary text-truncate">{{ authStore.username || 'Ładowanie...' }}</span>
+                <span class="dropdown-item-text fw-bold text-primary text-truncate">{{ authStore.username }}</span>
               </li>
+
               <li><hr class="dropdown-divider"></li>
+
+              <li v-if="authStore.user?.role === 'ROLE_ADMIN'">
+                <router-link to="/admin" class="dropdown-item fw-bold">
+                  <i class="bi bi-gear me-2"></i> Panel administratora
+                </router-link>
+              </li>
+
+              <li><hr class="dropdown-divider"></li>
+
               <li>
                 <a class="dropdown-item text-danger fw-bold" href="#" @click.prevent="handleLogout">
-                  <i class="bi bi-box-arrow-right me-2 bold"></i> Wyloguj się
+                  <i class="bi bi-box-arrow-right me-2"></i> Wyloguj się
                 </a>
               </li>
             </ul>
+
           </div>
         </template>
       </div>
