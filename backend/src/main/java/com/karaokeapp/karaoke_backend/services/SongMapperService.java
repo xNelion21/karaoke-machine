@@ -12,6 +12,7 @@ import com.karaokeapp.karaoke_backend.repositories.AuthorRepository;
 import com.karaokeapp.karaoke_backend.repositories.CategoryRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -154,10 +155,30 @@ public class SongMapperService {
             return null;
         }
         SongDetailsDTO dto = new SongDetailsDTO();
-        dto.setSong(toResponseDTO(song));
+
+        dto.setId(song.getId());
+        dto.setTitle(song.getTitle());
+
+        if (song.getAuthors() != null) {
+            Set<String> authorNames = song.getAuthors().stream()
+                    .map(Author::getName)
+                    .collect(Collectors.toSet());
+            dto.setAuthors(authorNames);
+        }
+
+
+        if (song.getCategories() != null) {
+            Set<String> categoryNames = song.getCategories().stream()
+                    .map(Category::getName)
+                    .collect(Collectors.toSet());
+            dto.setCategories(categoryNames);
+        }
+
+        dto.setGenre(song.getGenre());
 
         dto.setLyricLines(
                 song.getLyricLines().stream()
+                        .sorted(Comparator.comparing(LyricLine::getTimeStampStart))
                         .map(lyricLineMapperService::toDTO)
                         .toList()
         );
