@@ -23,7 +23,7 @@
         </div>
         <div v-if="errorMessage" class="alert alert-danger mt-3">{{ errorMessage }}</div>
 
-        <button class="w-100 btn btn-lg btn-primary mt-4" type="submit">Zaloguj</button>
+        <button class="w-100 btn btn-lg btn-primary mt-4" type="submit" method="POST">Zaloguj</button>
       </form>
 
       <div class="divider my-4">LUB</div>
@@ -68,9 +68,9 @@ const handleLogin = async () => {
 }
 
 const handleFacebookLogin = () => {
-  console.log('Logowanie przez Facebooka - do zaimplementowania w przyszłości.');
-  alert('Funkcjonalność logowania przez Facebooka nie jest jeszcze dostępna.');
+  window.location.href = 'http://localhost:8080/oauth2/authorization/facebook';
 }
+
 </script>
 
 <style scoped>

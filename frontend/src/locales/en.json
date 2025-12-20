@@ -1,0 +1,46 @@
+{
+  "nav": {
+    "login": "Log in",
+    "register": "Sign up",
+    "logged_as": "Logged in as:",
+    "logout": "Log out"
+  },
+  "home": {
+    "title": "Your stage. Your words. Your voice.",
+    "subtitle": "Sing your favorite songs with perfectly synchronized lyrics. Join the community of music enthusiasts.",
+    "join": "Join for free",
+    "start": "Start singing!"
+  },
+  "auth": {
+    "login_header": "Log in",
+    "login_sub": "Welcome back! We're glad you're here.",
+    "register_header": "Create an account",
+    "register_sub": "Join us and start singing today!",
+    "username": "Username",
+    "email": "Email address",
+    "password": "Password",
+    "remember": "Remember me",
+    "no_account": "Don't have an account?",
+    "has_account": "Already have an account?",
+    "btn_login": "Log in",
+    "btn_register": "Sign up",
+    "btn_facebook": "Continue with Facebook",
+    "or": "OR"
+  },
+  "app": {
+    "search_placeholder": "Enter title...",
+    "favorites": "Favorites",
+    "no_results": "No results found.",
+    "no_favorites": "No favorite songs found.",
+    "no_related": "No songs found from genrewwwww",
+    "related": "Related songs",
+    "loading": "Loading...",
+    "select_song": "Select a song to see related tracks."
+  },
+  "player": {
+    "no_video" : "No video found for this song.",
+    "no_timestamp": "No time synchronization",
+    "no_text": "No text found for this song",
+    "select": "Select a song to start the karaoke!"
+  }
+}

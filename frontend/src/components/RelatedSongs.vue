@@ -2,20 +2,20 @@
   <div class="related-songs-list">
     <h3 class="h5 fw-bold mb-4 d-flex align-items-center justify-content-center section-header">
       <i class="bi bi-shuffle me-2 text-primary fs-4 icon-mobile"></i>
-      Powiązane utwory
+      {{ $t('app.related') }}
       <span v-if="genre" class="badge ms-2">{{ genre }}</span>
     </h3>
 
     <div v-if="songsStore.isRelatedLoading" class="text-center text-muted py-5">
       <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Ładowanie...</span>
+        <span class="visually-hidden">{{ $t('app.loading') }}</span>
       </div>
-      <p class="mt-2">Ładowanie rekomendacji...</p>
+      <p class="mt-2">{{ $t('app.loading') }}</p>
     </div>
 
     <div v-else-if="!genre" class="text-light text-center py-5">
       <i class="bi bi-music-note-list display-6 mb-3 text-light"></i>
-      <p class="m-3">Wybierz piosenkę, aby zobaczyć powiązane utwory.</p>
+      <p class="m-3">{{ $t('app.select_song') }}</p>
     </div>
 
     <ul v-else-if="songsStore.relatedSongs.length > 0" class="list-unstyled">
@@ -35,7 +35,7 @@
 
     <div v-else class="text-light text-center py-5">
       <i class="bi bi-box-seam-fill display-6 mb-4 text-light"></i>
-      <p class="m-4">Nie znaleziono więcej utworów z gatunku <b>{{ genre }}</b>.</p>
+      <p class="m-4">{{ $t('app.no_related') }}<b>{{ genre }}</b>.</p>
     </div>
   </div>
 </template>

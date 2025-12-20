@@ -6,7 +6,7 @@
         @focus="handleFocus"
         type="text"
         class="form-control"
-        placeholder="Wpisz tytuł..."
+        :placeholder="$t('app.search_placeholder')"
     />
 
     <ul v-if="showResults && songsStore.hasResults" class="song-list mt-3 shadow-lg">
@@ -20,12 +20,17 @@
           <strong>{{ song.title }}</strong>
           <div class="artist">{{ song.artist }}</div>
         </div>
-        <span class="badge">{{ song.categories?.[0] || "Inne" }}</span>
+        <span class="badge">{{ song.categories?.[0] || $t('app.loading')}}</span>
       </li>
     </ul>
 
-    <div v-else-if="showResults && songsStore.searchQuery && !songsStore.hasResults" class="song-item song-list mt-3">
-      Brak wyników.
+    <div v-else-if="showResults && songsStore.isLoading" class="song-item song-list mt-3 justify-content-center">
+      <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+      <span class="text-muted">Szukam...</span>
+    </div>
+
+    <div v-else-if="showResults && songsStore.searchQuery && !songsStore.hasResults && !songsStore.isLoading" class="song-item song-list mt-3 text-light">
+      {{ $t('app.no_results') }}
     </div>
   </div>
 </template>
@@ -53,7 +58,6 @@ function handleFocus() {
 
 function selectSong(song) {
   emit('song-selected', song);
-
   showResults.value = false;
   songsStore.clearSearch();
 }
@@ -74,13 +78,13 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-
 .search-bar {
   width: 100%;
   max-width: 600px;
   position: relative;
   z-index: 10;
-  margin-top: 20px; }
+  margin-top: 20px;
+}
 
 .form-control {
   padding: 14px 20px;
@@ -93,12 +97,14 @@ onBeforeUnmount(() => {
 }
 
 .form-control::placeholder {
-  color: #9e9e9e;
+  color: #aaa;
+  opacity: 1;
 }
 
 .form-control:focus {
   border-color: #6C63FF;
   outline: none;
+  box-shadow: 0 0 10px rgba(108, 99, 255, 0.5);
 }
 
 .song-list {
@@ -124,6 +130,7 @@ onBeforeUnmount(() => {
   padding: 12px 20px;
   border-bottom: 1px solid #333;
   cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 .song-item:hover {

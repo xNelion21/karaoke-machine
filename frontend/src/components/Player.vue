@@ -33,7 +33,7 @@
       <div v-if="videoId" ref="youtubeTarget" class="youtube-target"></div>
       <div v-else class="no-video-placeholder">
         <i class="bi bi-camera-video-off"></i>
-        <p>Brak wideo dla tego utworu.</p>
+        <p>{{ $t('player.no_video') }}</p>
       </div>
     </div>
 
@@ -61,13 +61,13 @@
       </div>
 
       <div v-else-if="songDetails.song?.lyrics || songDetails.lyrics" class="fallback-lyrics">
-        <p class="info-text">Brak synchronizacji czasowej.</p>
+        <p class="info-text">{{ $t('player.no_timestamp') }}</p>
         <pre>{{ songDetails.song?.lyrics || songDetails.lyrics }}</pre>
       </div>
 
       <div v-else class="fallback-lyrics empty">
         <i class="bi bi-music-note-list"></i>
-        <p>Brak tekstu dla tego utworu.</p>
+        <p>{{ $t('player.no_text') }}</p>
       </div>
 
     </div>
@@ -75,7 +75,7 @@
   </div>
   <div v-else class="no-song-selected">
     <i class="bi bi-disc spin-animation"></i>
-    <p>Wybierz piosenkę, aby rozpocząć karaoke!</p>
+    <p>{{ $t('player.select') }}</p>
   </div>
 </template>
 

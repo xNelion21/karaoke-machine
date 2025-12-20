@@ -7,16 +7,16 @@
         <div class="row justify-content-center">
           <div class="col-md-9 text-center">
             <h1 class="display-2 fw-bold hero-title">
-              Twoja scena. Twoje słowa. Twój głos.
+              {{ $t('home.title') }}
             </h1>
             <p class="lead mt-4 mb-5 hero-subtitle">
-              Śpiewaj ulubione utwory z tekstem zsynchronizowanym w idealnym momencie. Dołącz do społeczności pasjonatów muzyki.
+              {{ $t('home.subtitle') }}
             </p>
             <router-link v-if="!loggedIn" to="/register" class="btn btn-primary btn-lg cta-button">
-              Dołącz za darmo
+              {{ $t('home.join') }}
             </router-link>
             <router-link v-else to="/app" class="btn btn-primary btn-lg cta-button">
-              Zacznij śpiewac!
+              {{ $t('home.start') }}
             </router-link>
           </div>
         </div>
