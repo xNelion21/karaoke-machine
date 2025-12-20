@@ -8,7 +8,7 @@
 
       <form @submit.prevent="handleRegister">
         <div class="form-floating mb-3">
-          <input v-model="username" type="text" class="form-control" id="floatingUsername" placeholder="Twoja nazwa" required>
+          <input v-model="username" type="text" class="form-control" id="floatingUsername" placeholder="Username" required>
           <label for="floatingUsername">{{ $t('auth.username') }}</label>
         </div>
 
