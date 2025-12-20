@@ -7,6 +7,8 @@ import com.karaokeapp.karaoke_backend.models.User;
 import com.karaokeapp.karaoke_backend.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.List;
 import com.karaokeapp.karaoke_backend.repositories.SongRepository;
@@ -65,6 +67,25 @@ public class UserService {
     }
 
     //polubione
+    public UserResponseDTO getUserDtoByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Użytkownik nie znaleziony"));
+
+        UserResponseDTO dto = new UserResponseDTO();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
+        dto.setRole(user.getRole());
+
+        if (user.getLikedSongs() != null) {
+            Set<Long> ids = user.getLikedSongs().stream()
+                    .map(Song::getId)
+                    .collect(Collectors.toSet());
+            dto.setLikedSongIds(ids);
+        }
+        return dto;
+    }
+
     public void addLikedSong(String username, Long songId) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Użytkownik nie znaleziony."));
