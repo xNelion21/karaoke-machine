@@ -1,10 +1,8 @@
 package com.karaokeapp.karaoke_backend.controllers;
 
-import com.karaokeapp.karaoke_backend.dto.SongDetailsDTO;
-import com.karaokeapp.karaoke_backend.dto.SongRequestDTO;
-import com.karaokeapp.karaoke_backend.dto.SongResponseDTO;
-import com.karaokeapp.karaoke_backend.dto.SuggestionRequestDTO;
+import com.karaokeapp.karaoke_backend.dto.*;
 import com.karaokeapp.karaoke_backend.services.SongService;
+import com.karaokeapp.karaoke_backend.services.YoutubeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,7 +17,7 @@ import java.util.List;
 public class SongController {
 
     private final SongService songService;
-
+    private final YoutubeService youtubeService;
     @GetMapping
     public ResponseEntity<List<SongResponseDTO>> getAllSongs() {
         List<SongResponseDTO> songs = songService.getAllSongs();
@@ -80,5 +78,11 @@ public class SongController {
     public ResponseEntity<Void> submitSuggestion(@Valid @RequestBody SuggestionRequestDTO suggestionDTO) {
         songService.submitSuggestion(suggestionDTO);
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
+    }
+
+    @GetMapping("/search-online")
+    public ResponseEntity<List<YoutubeSongDto>> searchOnline(@RequestParam String query) {
+        List<YoutubeSongDto> results = youtubeService.searchSongs(query);
+        return ResponseEntity.ok(results);
     }
 }
