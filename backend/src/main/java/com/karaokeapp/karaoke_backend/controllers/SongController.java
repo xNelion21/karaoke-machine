@@ -1,15 +1,18 @@
 package com.karaokeapp.karaoke_backend.controllers;
 
 import com.karaokeapp.karaoke_backend.dto.*;
+import com.karaokeapp.karaoke_backend.models.Song;
 import com.karaokeapp.karaoke_backend.services.SongService;
 import com.karaokeapp.karaoke_backend.services.YoutubeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/songs")
@@ -84,5 +87,20 @@ public class SongController {
     public ResponseEntity<List<YoutubeSongDto>> searchOnline(@RequestParam String query) {
         List<YoutubeSongDto> results = youtubeService.searchSongs(query);
         return ResponseEntity.ok(results);
+    }
+
+    @PostMapping("/like")
+    public ResponseEntity<Song> likeSong(@RequestBody YoutubeSongDto youtubeSongDto) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Song savedSong = songService.likeYoutubeSong(youtubeSongDto, username);
+        return ResponseEntity.ok(savedSong);
+    }
+
+
+    @GetMapping("/my-liked-songs")
+    public ResponseEntity<Set<Song>> getMyLikedSongs() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Set<Song> mySongs = songService.getSongsForUser(username);
+        return ResponseEntity.ok(mySongs);
     }
 }
