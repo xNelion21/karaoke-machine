@@ -1,8 +1,5 @@
 package com.karaokeapp.karaoke_backend.services;
-import com.karaokeapp.karaoke_backend.dto.SongDetailsDTO;
-import com.karaokeapp.karaoke_backend.dto.SongRequestDTO;
-import com.karaokeapp.karaoke_backend.dto.SongResponseDTO;
-import com.karaokeapp.karaoke_backend.dto.SuggestionRequestDTO;
+import com.karaokeapp.karaoke_backend.dto.*;
 import com.karaokeapp.karaoke_backend.models.Song;
 import com.karaokeapp.karaoke_backend.models.Suggestion;
 import com.karaokeapp.karaoke_backend.models.User;
@@ -17,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -135,6 +133,36 @@ public class SongService {
         suggestion.setProposedContent(dto.getProposedContent());
 
         suggestionRepository.save(suggestion);
+    }
+
+
+    public Song likeYoutubeSong(YoutubeSongDto dto, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Użytkownik nie znaleziony"));
+
+        Song song = getOrCreateSong(dto);
+        if (!user.getLikedSongs().contains(song)) {
+            user.getLikedSongs().add(song);
+            userRepository.save(user);
+        }
+        return song;
+    }
+    private Song getOrCreateSong(YoutubeSongDto dto) {
+        return songRepository.findAll().stream()
+                .filter(s -> s.getYoutubeUrl() != null && s.getYoutubeUrl().contains(dto.getVideoId()))
+                .findFirst()
+                .orElseGet(() -> {
+                    Song newSong = new Song();
+                    newSong.setTitle(dto.getTitle());
+                    newSong.setYoutubeUrl("https://www.youtube.com/watch?v=" + dto.getVideoId());
+                    return songRepository.save(newSong);
+                });
+    }
+
+    public Set<Song> getSongsForUser(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Użytkownik nie znaleziony"));
+        return user.getLikedSongs();
     }
 
     }
