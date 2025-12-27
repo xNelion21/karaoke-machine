@@ -14,13 +14,13 @@
         <aside class="col-lg-3 col-md-12 left-block order-2 order-lg-1">
           <div class="section-content-centered">
             <h2 class="h5 sidebar-title">
-              <i class="bi bi-heart-fill heart me-2 text-accent"></i> Ulubione
+              <i class="bi bi-heart-fill heart me-2 text-accent"></i> {{ $t('app.favorites') }}
             </h2>
 
-            <div v-if="songsStore.favoriteSongsList.length > 0" class="mt-4 w-100 sidebar-content-scroll">
+            <div v-if="favoriteSongsList.length > 0" class="mt-4 w-100 sidebar-content-scroll">
               <ul class="list-unstyled sidebar-list">
                 <li
-                    v-for="song in songsStore.favoriteSongsList"
+                    v-for="song in favoriteSongsList"
                     :key="song.id"
                     @click="handleSongSelected(song)"
                     class="sidebar-song-item"
@@ -32,7 +32,7 @@
             </div>
             <div v-else class="text-light mt-4 py-5">
               <i class="bi bi-bookmark-heart display-6 mb-3 text-light"></i>
-              <p class="m-3">Brak ulubionych utworów.</p>
+              <p class="m-3">{{ $t('app.no_favorites') }}</p>
             </div>
           </div>
         </aside>
@@ -60,18 +60,33 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useSongsStore } from '@/stores/songs.js'
 import Navbar from '@/components/Navbar.vue'
 import SearchBar from '@/components/SearchBar.vue'
 import Player from '@/components/Player.vue'
 import RelatedSongs from '@/components/RelatedSongs.vue'
+import { useFavoritesStore } from "@/stores/favorites.js";
 
 const songsStore = useSongsStore()
+const favoriteStore = useFavoritesStore()
 const isLoadingDetails = ref(false)
 
-onMounted(() => {
-  songsStore.fetchSongs()
+const favoriteSongsList = computed(() => {
+  const allSongs = songsStore.allSongs
+  const likedIds = favoriteStore.favoriteIds
+
+  if (!allSongs?.length || !likedIds?.length) {
+    return []
+  }
+
+  return allSongs.filter(song => likedIds.includes(song.id))
+})
+
+onMounted(async () => {
+  if (!songsStore.songs?.length) {
+    await songsStore.fetchSongs()
+  }
 })
 
 async function handleSongSelected(song) {

@@ -3,9 +3,12 @@ import axios from 'axios'
 import { useAuthStore } from '@/stores/auth.js'
 import { useFavoritesStore } from '@/stores/favorites.js'
 
+let searchDebounceTimer = null;
+
 export const useSongsStore = defineStore('songs', {
     state: () => ({
         allSongs: [],
+        searchResults: [],
         currentSong: null,
 
         relatedSongs: [],
@@ -18,11 +21,7 @@ export const useSongsStore = defineStore('songs', {
 
     getters: {
         filteredSongs: (state) => {
-            const query = state.searchQuery.toLowerCase().trim()
-            if (!query) return []
-            return state.allSongs.filter(song =>
-                song.title.toLowerCase().includes(query)
-            )
+            return state.searchResults
         },
         hasResults: (state) => state.filteredSongs.length > 0,
 
@@ -91,9 +90,43 @@ export const useSongsStore = defineStore('songs', {
             }, 300);
         },
 
+        setSearchQuery(query) {
+            this.searchQuery = query;
 
-        setSearchQuery(query) { this.searchQuery = query },
-        clearSearch() { this.searchQuery = '' },
-        resetState() {this.allSongs = []; this.relatedSongs = []; this.currentSong = null; },
+            if (!query || query.trim() === '') {
+                this.searchResults = [];
+                return;
+            }
+
+            const authStore = useAuthStore();
+            if (!authStore.isAuthenticated) return;
+
+            if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+
+            searchDebounceTimer = setTimeout(async () => {
+                try {
+                    const response = await axios.get('/songs/search', {
+                        params: { query: query },
+                        headers: { Authorization: `Bearer ${authStore.token}` }
+                    });
+                    this.searchResults = response.data;
+                } catch (e) {
+                    console.error("Błąd wyszukiwania API:", e);
+                    this.searchResults = [];
+                }
+            }, 300);
+        },
+
+        clearSearch() {
+            this.searchQuery = '';
+            this.searchResults = [];
+        },
+
+        resetState() {
+            this.allSongs = [];
+            this.searchResults = [];
+            this.relatedSongs = [];
+            this.currentSong = null;
+        },
     }
 })

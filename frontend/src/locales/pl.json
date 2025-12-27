@@ -1,0 +1,47 @@
+{
+  "nav": {
+    "login": "Zaloguj się",
+    "register": "Zarejestruj się",
+    "logged_as": "Zalogowany jako:",
+    "logout": "Wyloguj",
+    "loading": "Ładowanie..."
+  },
+  "home": {
+    "title": "Twoja scena. Twoje słowa. Twój głos.",
+    "subtitle": "Śpiewaj ulubione utwory z tekstem zsynchronizowanym w idealnym momencie. Dołącz do społeczności pasjonatów muzyki.",
+    "join": "Dołącz za darmo",
+    "start": "Zacznij śpiewać!"
+  },
+  "auth": {
+    "login_header": "Zaloguj się",
+    "login_sub": "Witaj z powrotem! Cieszymy się, że jesteś.",
+    "register_header": "Załóż konto",
+    "register_sub": "Dołącz do nas i zacznij śpiewać już dziś!",
+    "username": "Nazwa użytkownika",
+    "email": "Adres email",
+    "password": "Hasło",
+    "remember": "Zapamiętaj mnie",
+    "no_account": "Nie masz konta? Zarejestruj się",
+    "has_account": "Masz już konto? Zaloguj się",
+    "btn_login": "Zaloguj się",
+    "btn_register": "Zarejestruj się",
+    "btn_facebook": "Kontynuuj z Facebook",
+    "or": "LUB"
+  },
+  "app": {
+    "search_placeholder": "Wpisz tytuł...",
+    "favorites": "Ulubione",
+    "no_results": "Brak wyników.",
+    "no_favorites": "Brak ulubionych piosenek",
+    "no_related": "Nie znaleziono utworów z gatunku",
+    "related": "Powiązane utwory",
+    "loading": "Ładowanie...",
+    "select_song": "Wybierz piosenkę, aby zobaczyć powiązane utwory."
+  },
+  "player": {
+    "no_video" : "Brak wideo dla tego utworu.",
+    "no_timestamp": "Brak synchronizacji czasowej.",
+    "no_text": "Brak tekstu dla tego utworu.",
+    "select": "Wybierz piosenkę, aby rozpocząć karaoke!"
+  }
+}
