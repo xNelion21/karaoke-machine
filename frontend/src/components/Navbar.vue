@@ -148,7 +148,7 @@ onUnmounted(() => {
 
 <style scoped>
 .navbar {
-  background: rgba(24, 24, 24, 0.6);
+  background: rgba(24, 24, 24);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   z-index: 1050;
@@ -181,12 +181,6 @@ onUnmounted(() => {
   box-shadow: 0 6px 20px rgba(108, 99, 255, 0.4);
 }
 
-.search-wrapper {
-  display: flex;
-  justify-content: center;
-  width: 300px;
-}
-
 .nav-item.dropdown .nav-link {
   color: #E0E0E0 !important;
 }
@@ -207,7 +201,7 @@ onUnmounted(() => {
   margin-top: 5px;
   min-width: 180px;
 }
-.dropdown-item, .dropdown-header, .dropdown-item-text {
+.dropdown-item, .dropdown-item-text {
   color: #E0E0E0;
   padding: 8px 15px;
 }

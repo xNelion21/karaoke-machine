@@ -11,4 +11,6 @@ public class YoutubeSongDto {
     private String videoId;
     private String title;
     private String thumbnailUrl;
+
+    private String artist;
 }

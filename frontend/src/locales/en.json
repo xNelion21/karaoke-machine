@@ -30,9 +30,9 @@
   "app": {
     "search_placeholder": "Enter title...",
     "favorites": "Favorites",
-    "no_results": "No results found.",
+    "no_results": "No results found",
     "no_favorites": "No favorite songs found.",
-    "no_related": "No songs found from genrewwwww",
+    "no_related": "No songs found from genre",
     "related": "Related songs",
     "loading": "Loading...",
     "select_song": "Select a song to see related tracks."
@@ -41,6 +41,8 @@
     "no_video" : "No video found for this song.",
     "no_timestamp": "No time synchronization",
     "no_text": "No text found for this song",
+    "youtube_karaoke" : "Karaoke video",
+    "youtube_text": "The lyrics should be displayed in the video",
     "select": "Select a song to start the karaoke!"
   }
 }

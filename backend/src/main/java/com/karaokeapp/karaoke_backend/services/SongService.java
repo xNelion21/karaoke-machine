@@ -1,5 +1,6 @@
 package com.karaokeapp.karaoke_backend.services;
 import com.karaokeapp.karaoke_backend.dto.*;
+import com.karaokeapp.karaoke_backend.models.Author;
 import com.karaokeapp.karaoke_backend.models.Song;
 import com.karaokeapp.karaoke_backend.models.Suggestion;
 import com.karaokeapp.karaoke_backend.models.User;
@@ -7,12 +8,23 @@ import com.karaokeapp.karaoke_backend.repositories.CategoryRepository;
 import com.karaokeapp.karaoke_backend.repositories.SongRepository;
 import com.karaokeapp.karaoke_backend.repositories.SuggestionRepository;
 import com.karaokeapp.karaoke_backend.repositories.UserRepository;
+import com.karaokeapp.karaoke_backend.repositories.AuthorRepository;
+import com.karaokeapp.karaoke_backend.dto.*;
+import com.karaokeapp.karaoke_backend.repositories.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,6 +47,7 @@ public class SongService {
     private final CategoryRepository categoryRepository;
     private final SuggestionRepository suggestionRepository;
     private final UserRepository userRepository;
+    private final AuthorRepository authorRepository;
 
     public SongResponseDTO createSong(SongRequestDTO requestDTO) {
         if (songRepository.existsByTitle(requestDTO.getTitle())) {
@@ -148,15 +161,36 @@ public class SongService {
         return song;
     }
     private Song getOrCreateSong(YoutubeSongDto dto) {
-        return songRepository.findAll().stream()
-                .filter(s -> s.getYoutubeUrl() != null && s.getYoutubeUrl().contains(dto.getVideoId()))
-                .findFirst()
-                .orElseGet(() -> {
-                    Song newSong = new Song();
-                    newSong.setTitle(dto.getTitle());
-                    newSong.setYoutubeUrl("https://www.youtube.com/watch?v=" + dto.getVideoId());
-                    return songRepository.save(newSong);
-                });
+        String fullYoutubeUrl = "https://www.youtube.com/watch?v=" + dto.getVideoId();
+
+        Optional<Song> existingSong = songRepository.findByYoutubeUrl(fullYoutubeUrl);
+
+        if (existingSong.isPresent()) {
+            return existingSong.get();
+        }
+
+        Song newSong = new Song();
+        newSong.setTitle(dto.getTitle());
+        newSong.setYoutubeUrl(fullYoutubeUrl);
+        newSong.setThumbnailUrl(dto.getThumbnailUrl());
+
+        if (dto.getArtist() != null && !dto.getArtist().trim().isEmpty()) {
+            String artistName = dto.getArtist().trim();
+
+            Author author = authorRepository.findByName(artistName)
+                    .orElseGet(() -> {
+                        Author newAuthor = new Author();
+                        newAuthor.setName(artistName);
+                        return authorRepository.save(newAuthor);
+                    });
+
+            if (newSong.getAuthors() == null) {
+                newSong.setAuthors(new HashSet<>());
+            }
+            newSong.getAuthors().add(author);
+        }
+
+        return songRepository.save(newSong);
     }
 
     public Set<Song> getSongsForUser(String username) {

@@ -4,6 +4,8 @@ import com.karaokeapp.karaoke_backend.dto.YoutubeSongDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.HtmlUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,12 +36,32 @@ public class YoutubeService {
                     Map<String, Object> snippet = (Map<String, Object>) item.get("snippet");
                     Map<String, Object> thumbnails = (Map<String, Object>) snippet.get("thumbnails");
                     Map<String, Object> mediumThumb = (Map<String, Object>) thumbnails.get("medium");
+                    String rawTitle = (String) snippet.get("title");
 
-                    songs.add(new YoutubeSongDto(
-                            (String) idMap.get("videoId"),
-                            (String) snippet.get("title"),
-                            (String) mediumThumb.get("url")
-                    ));
+                    String decodedTitle = HtmlUtils.htmlUnescape(rawTitle);
+
+                    String artist = null;
+                    String title = decodedTitle;
+
+                    if (decodedTitle.contains(" - ")) {
+                        String[] parts = decodedTitle.split(" - ", 2);
+                        artist = parts[0].trim();
+
+                        if (parts.length > 1) {
+                            title = parts[1].trim();
+                        }
+                    }
+
+                    YoutubeSongDto dto = new YoutubeSongDto();
+                    dto.setVideoId((String) idMap.get("videoId"));
+                    dto.setTitle(title);
+                    dto.setArtist(artist);
+
+                    if (mediumThumb != null) {
+                        dto.setThumbnailUrl((String) mediumThumb.get("url"));
+                    }
+
+                    songs.add(dto);
                 }
             }
             return songs;

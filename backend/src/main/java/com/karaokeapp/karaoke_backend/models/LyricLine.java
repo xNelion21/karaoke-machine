@@ -1,5 +1,6 @@
 package com.karaokeapp.karaoke_backend.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,5 +28,7 @@ public class LyricLine {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "song_id", nullable = false)
+    @JsonIgnore // song zwracalo lyricline a lyricline song (petla przy wywolywaniu my-liked-songs)
     private Song song;
+
 }
