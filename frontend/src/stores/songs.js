@@ -1,99 +1,134 @@
-import { defineStore } from 'pinia'
-import axios from 'axios'
-import { useAuthStore } from '@/stores/auth.js'
-import { useFavoritesStore } from '@/stores/favorites.js'
+import { defineStore } from 'pinia';
+import axios from 'axios';
+import { useAuthStore } from '@/stores/auth.js';
+import { useFavoritesStore } from '@/stores/favorites.js';
+import { normalizeSong } from '@/utils/songUtils';
 
 export const useSongsStore = defineStore('songs', {
     state: () => ({
         allSongs: [],
+        searchResults: [],
         currentSong: null,
-
         relatedSongs: [],
         isRelatedLoading: false,
-
         searchQuery: '',
         isLoading: false,
+        isSearching: false,
         error: null
     }),
 
     getters: {
         filteredSongs: (state) => {
-            const query = state.searchQuery.toLowerCase().trim()
-            if (!query) return []
-            return state.allSongs.filter(song =>
-                song.title.toLowerCase().includes(query)
-            )
+            return state.searchResults.map(song => normalizeSong(song));
         },
-        hasResults: (state) => state.filteredSongs.length > 0,
+
+        hasResults: (state) => state.searchResults.length > 0,
 
         favoriteSongsList: (state) => {
-            const favoritesStore = useFavoritesStore()
-            return state.allSongs.filter(song => favoritesStore.isFavorite(song.id))
-        }
+            const favoritesStore = useFavoritesStore();
+            return state.allSongs
+                .map(s => normalizeSong(s))
+                .filter(song => favoritesStore.isFavorite(song));
+        },
+        relatedSongsNormalized: (state) => {
+            return state.relatedSongs
+                .map(song => normalizeSong(song))
+                .filter(song => song !== null);
+        },
     },
 
     actions: {
         async fetchSongs() {
-            const authStore = useAuthStore()
-            if (!authStore.isAuthenticated) return
+            const authStore = useAuthStore();
+            if (!authStore.isAuthenticated) return;
 
             this.isLoading = true;
             try {
-                const response = await axios.get('/songs', {
-                    headers: { Authorization: `Bearer ${authStore.token}` }
-                })
-                this.allSongs = response.data
+                const response = await axios.get('/songs');
+                this.allSongs = response.data;
             } catch (e) {
-                console.error("Błąd pobierania listy piosenek:", e)
+                console.error("Błąd pobierania listy piosenek:", e);
             } finally {
                 this.isLoading = false;
             }
         },
 
-        async fetchSongDetails(id) {
-            const authStore = useAuthStore()
-            this.currentSong = null;
-
-            try {
-                const response = await axios.get(`/songs/${id}`, {
-                    headers: { Authorization: `Bearer ${authStore.token}` }
-                })
-                this.currentSong = response.data;
-            } catch (err) {
-                console.error("Błąd pobierania szczegółów:", err);
+        async fetchSongDetails(song) {
+            if (song.id) {
+                try {
+                    const response = await axios.get(`/songs/${song.id}`);
+                    this.currentSong = normalizeSong(response.data);
+                } catch (e) {
+                    console.error("Błąd pobierania szczegółów:", e);
+                }
+            } else {
+                this.currentSong = song;
             }
         },
 
-        fetchRelatedSongs(category, currentSongId) {
-            this.relatedSongs = []
-            this.isRelatedLoading = true
+        async setSearchQuery(query) {
+            this.searchQuery = query;
+            if (!query) {
+                this.searchResults = [];
+                return;
+            }
 
-            setTimeout(() => {
+            this.isSearching = true;
+            this.isLoading = true;
+
+            try {
+                const lowerQuery = query.toLowerCase();
+                const localResults = this.allSongs.filter(song => {
+                    const title = song.song?.title || song.title || '';
+                    const artist = Array.isArray(song.song?.authors)
+                        ? song.song.authors.join(' ')
+                        : (song.song?.artist || song.artist || '');
+
+                    return title.toLowerCase().includes(lowerQuery) ||
+                        String(artist).toLowerCase().includes(lowerQuery);
+                });
+
+                let onlineResults = [];
                 try {
-                    const results = this.allSongs.filter(song => {
-                        const songCategories = song.categories || song.song?.categories || [];
-                        const hasCategory = songCategories.includes(category);
-
-                        const isNotCurrent = song.id !== currentSongId;
-
-                        return hasCategory && isNotCurrent;
-                    });
-
-                    this.relatedSongs = results
-                        .sort(() => 0.5 - Math.random())
-                        .slice(0, 4);
-
-                } catch (error) {
-                    console.error("Błąd filtrowania powiązanych:", error);
-                } finally {
-                    this.isRelatedLoading = false;
+                    const response = await axios.get('/songs/search-online', { params: { query } });
+                    onlineResults = response.data || [];
+                } catch (e) {
+                    console.warn("Szukanie online nieudane:", e.message);
                 }
-            }, 300);
+
+                this.searchResults = [...localResults, ...onlineResults];
+
+            } catch (e) {
+                console.error("Błąd wyszukiwania:", e);
+            } finally {
+                this.isSearching = false;
+                this.isLoading = false;
+            }
         },
 
+        clearSearch() {
+            this.searchQuery = '';
+            this.searchResults = [];
+        },
 
-        setSearchQuery(query) { this.searchQuery = query },
-        clearSearch() { this.searchQuery = '' },
-        resetState() {this.allSongs = []; this.relatedSongs = []; this.currentSong = null; },
+        async fetchRelatedSongs(artistName) {
+            this.isRelatedLoading = true;
+            try {
+                const response = await axios.get('/songs/search-online', { params: { query: artistName } });
+                this.relatedSongs = Array.isArray(response.data) ? response.data : [];
+            } catch (e) {
+                console.error(e);
+            } finally {
+                this.isRelatedLoading = false;
+            }
+        },
+
+        resetState() {
+            this.allSongs = [];
+            this.searchResults = [];
+            this.relatedSongs = [];
+            this.currentSong = null;
+            this.searchQuery = '';
+        },
     }
-})
+});
