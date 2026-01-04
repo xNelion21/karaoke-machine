@@ -2,6 +2,7 @@ package com.karaokeapp.karaoke_backend.controllers;
 
 import com.karaokeapp.karaoke_backend.dto.AuthorDTO;
 import com.karaokeapp.karaoke_backend.services.AuthorService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +30,7 @@ public class AuthorController {
     }
 
     @PostMapping
-    public ResponseEntity<AuthorDTO> createAuthor(@RequestBody AuthorDTO authorDTO) {
+    public ResponseEntity<AuthorDTO> createAuthor(@Valid @RequestBody AuthorDTO authorDTO) {
         AuthorDTO newAuthor = authorService.createAuthor(authorDTO);
         return new ResponseEntity<>(newAuthor, HttpStatus.CREATED);
     }
@@ -41,7 +42,7 @@ public class AuthorController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AuthorDTO> updateAuthor(@PathVariable Long id, @RequestBody AuthorDTO authorDTO) {
+    public ResponseEntity<AuthorDTO> updateAuthor(@Valid @PathVariable Long id, @RequestBody AuthorDTO authorDTO) {
         AuthorDTO updatedAuthor = authorService.updateAuthor(id, authorDTO);
         return ResponseEntity.ok(updatedAuthor);
     }

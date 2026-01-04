@@ -2,41 +2,41 @@
   <div class="auth-container">
     <div class="auth-card">
       <div class="text-center mb-4">
-        <h1 class="h3 mb-3 fw-bold">Załóż konto</h1>
-        <p class="text-muted-dark">Dołącz do nas i zacznij śpiewać już dziś!</p>
+        <h1 class="h3 mb-3 fw-bold">{{ $t('auth.register_header') }}</h1>
+        <p class="text-muted-dark">{{ $t('auth.register_sub') }}</p>
       </div>
 
       <form @submit.prevent="handleRegister">
         <div class="form-floating mb-3">
-          <input v-model="username" type="text" class="form-control" id="floatingUsername" placeholder="Twoja nazwa" required>
-          <label for="floatingUsername">Nazwa użytkownika</label>
+          <input v-model="username" type="text" class="form-control" id="floatingUsername" placeholder="Username" required>
+          <label for="floatingUsername">{{ $t('auth.username') }}</label>
         </div>
 
         <div class="form-floating mb-3">
           <input v-model="email" type="email" class="form-control" id="floatingEmail" placeholder="name@example.com" required>
-          <label for="floatingEmail">Adres email</label>
+          <label for="floatingEmail">{{ $t('auth.email') }}</label>
         </div>
         <div class="form-floating mb-3">
           <input v-model="password" type="password" class="form-control" id="floatingPassword" placeholder="Password" required>
-          <label for="floatingPassword">Hasło</label>
+          <label for="floatingPassword">{{ $t('auth.password') }}</label>
         </div>
 
         <div v-if="errorMessage" class="alert alert-danger mt-3">{{ errorMessage }}</div>
         <div v-if="successMessage" class="alert alert-success mt-3">{{ successMessage }}</div>
 
-        <button class="w-100 btn btn-lg btn-primary mt-4" type="submit">Zarejestruj</button>
+        <button class="w-100 btn btn-lg btn-primary mt-4" type="submit">{{ $t('auth.btn_register') }}</button>
       </form>
 
-      <div class="divider my-4">LUB</div>
+      <div class="divider my-4">{{ $t('auth.or') }}</div>
 
       <button @click="handleFacebookLogin" class="w-100 btn btn-lg btn-facebook" type="button">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="me-2"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v2.385z"/></svg>
-        Kontynuuj z Facebook
+        {{ $t('auth.btn_facebook') }}
       </button>
 
       <div class="mt-4 text-center">
-        <p class="text-muted-dark">Masz już konto?
-          <router-link to="/login">Zaloguj się</router-link>
+        <p class="text-muted-dark">{{ $t('auth.has_account') }}
+          <router-link to="/login">{{ $t('auth.btn_login') }}</router-link>
         </p>
       </div>
     </div>
@@ -55,7 +55,7 @@ const password = ref('')
 const router = useRouter()
 const authStore = useAuthStore()
 
-const { errorMessage } = storeToRefs(authStore)
+const { errorMessage, successMessage } = storeToRefs(authStore)
 
 const handleRegister = async () => {
   const success = await authStore.register({
@@ -70,14 +70,12 @@ const handleRegister = async () => {
 }
 
 const handleFacebookLogin = () => {
-  console.log('Logowanie przez Facebooka - do zaimplementowania w przyszłości.');
-  alert('Funkcjonalność logowania przez Facebooka nie jest jeszcze dostępna.');
+  window.location.href = 'http://localhost:8080/oauth2/authorization/facebook';
 }
 
 </script>
 
 <style scoped>
-/* UJEDNOLICONE STYLE DLA FORMULARZY AUTORYZACJI (identyczne jak w Login.vue) */
 .auth-container {
   display: flex;
   align-items: center;

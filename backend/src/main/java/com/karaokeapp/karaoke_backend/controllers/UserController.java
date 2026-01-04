@@ -17,14 +17,8 @@ import jakarta.validation.Valid;
 public class UserController {
 
     private final UserService userService;
-    @GetMapping("/me")
-    public ResponseEntity<UserResponseDTO> getCurrentUser(Authentication authentication) {
-        String username = authentication.getName();
-        UserResponseDTO userProfile = userService.getProfileByUsername(username);
-        return ResponseEntity.ok(userProfile);
-    }
 
-    // 2. AKTUALIZACJA PROFILU (PUT /api/users/{id})
+
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> updateProfile(
             @PathVariable Long id,
@@ -37,6 +31,13 @@ public class UserController {
     // ... Dalsze endpointy - zmiany hasla i inne cuda
 
     //polubione
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDTO> getCurrentUser() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserResponseDTO userDto = userService.getUserDtoByUsername(username);
+        return ResponseEntity.ok(userDto);
+    }
+
     @PostMapping("/me/likes/{songId}")
     public ResponseEntity<Void> addLikedSong(@PathVariable Long songId) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();

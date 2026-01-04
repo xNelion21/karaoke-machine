@@ -48,4 +48,7 @@ public class Song {
 
     @Column(name = "youtube_url")
     private String youtubeUrl;
+
+    @Column(name = "thumbnail_url")
+    private String thumbnailUrl;
 }

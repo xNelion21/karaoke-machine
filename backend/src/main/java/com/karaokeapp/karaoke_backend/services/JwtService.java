@@ -22,13 +22,10 @@ import java.util.function.Function;
 @Service
 @RequiredArgsConstructor
 public class JwtService {
-
     @Value("${application.security.jwt.secret-key}")
     private String secretKey;
-
     @Value("${application.security.jwt.expiration}")
     private long jwtExpiration;
-
     private final UserRepository userRepository;
 
     public String extractUsername(String token) {
@@ -42,7 +39,17 @@ public class JwtService {
 
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> extraClaims = new HashMap<>();
-        extraClaims.put("role", ((User) userDetails).getRole().name());
+
+        if (userDetails instanceof com.karaokeapp.karaoke_backend.models.User) {
+            extraClaims.put("role", ((com.karaokeapp.karaoke_backend.models.User) userDetails).getRole().name());
+        } else {
+            String role = userDetails.getAuthorities().stream()
+                    .map(org.springframework.security.core.GrantedAuthority::getAuthority)
+                    .findFirst()
+                    .orElse("ROLE_USER");
+            extraClaims.put("role", role);
+        }
+
         return buildToken(extraClaims, userDetails);
     }
 
