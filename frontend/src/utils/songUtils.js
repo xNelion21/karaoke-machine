@@ -1,13 +1,3 @@
-// src/utils/songUtils.js
-
-// 1. Nowa funkcja pomocnicza do dekodowania znaków (np. &#39; -> ')
-const decodeHtmlEntities = (text) => {
-    if (!text) return '';
-    const textarea = document.createElement('textarea');
-    textarea.innerHTML = text;
-    return textarea.value;
-};
-
 export const extractYoutubeId = (urlOrId) => {
     if (!urlOrId) return null;
     if (urlOrId.length === 11) return urlOrId;
@@ -66,7 +56,25 @@ export const normalizeSong = (input) => {
         videoId: videoId,
         youtubeUrl: core.youtubeUrl || (videoId ? `https://www.youtube.com/watch?v=${videoId}` : null),
         coverUrl: core.coverUrl || (videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : null),
-        categories: core.categories || [],
         duration: core.duration
     };
 };
+
+export function extractTitle(originalTitle, originalArtist) {
+    let finalArtist = originalArtist;
+    let finalTitle = cleanTitle(originalTitle);
+
+    if (finalTitle.includes(' - ')) {
+        const parts = finalTitle.split(' - ');
+
+        if (parts.length >= 2) {
+            const possibleArtist = parts[0].trim();
+            const possibleTitle = parts[1].trim();
+
+            finalArtist = possibleArtist;
+            finalTitle = possibleTitle;
+        }
+    }
+
+    return { artist: finalArtist, title: finalTitle };
+}

@@ -36,6 +36,11 @@
 
     <div class="lyrics-display">
 
+      <div v-if="isLyricsLoading" class="fallback-lyrics loading">
+        <i class="bi bi-arrow-repeat spin-animation"></i>
+        <p class="mt-3">{{  $t('app.loading') }}</p>
+      </div>
+
       <div v-if="sortedLyricLines && sortedLyricLines.length > 0" class="teleprompter-container" ref="teleprompterRef">
         <div class="teleprompter-content">
           <p
@@ -45,7 +50,7 @@
                 'line': true,
                 'active': activeLineIndex === index,
                 'past': index < activeLineIndex,
-                'future': index > activeLineIndex && index > (activeLineIndex + linesToShowBeforeAndAfter)
+                'future': index > activeLineIndex && index > (activeLineIndex)
               }"
               @click="seekTo(line.timeStampStart)"
               :ref="el => { if (activeLineIndex === index) activeLineRef = el }"
@@ -53,8 +58,6 @@
             {{ line.text }}
           </p>
         </div>
-        <div class="gradient-overlay top"></div>
-        <div class="gradient-overlay bottom"></div>
       </div>
 
       <div v-else-if="videoId" class="fallback-lyrics youtube-placeholder">
@@ -84,6 +87,9 @@
 <script setup>
 import { ref, computed, watch, onUnmounted, nextTick } from 'vue';
 import { useFavoritesStore } from '@/stores/favorites';
+import { fetchSyncedLyrics } from '@/services/lyricsService';
+import { parseLRC } from '@/utils/lrcParser';
+import { normalizeSong, extractTitle } from '@/utils/songUtils';
 
 const emit = defineEmits(['favorite-toggled']);
 
@@ -96,13 +102,15 @@ const props = defineProps({
 
 const favoritesStore = useFavoritesStore();
 
-const linesToShowBeforeAndAfter = 1;
 const player = ref(null);
 const currentTime = ref(0);
 const youtubeTarget = ref(null);
 const teleprompterRef = ref(null);
 const activeLineRef = ref(null);
 let playbackInterval = null;
+
+const fetchedLyricLines = ref([]);
+const isLyricsLoading = ref(false);
 
 const currentSongId = computed(() => {
   return props.songDetails?.id || props.songDetails?.song?.id;
@@ -112,19 +120,24 @@ const currentVideoId = computed(() => {
   const song = props.songDetails?.song || props.songDetails;
   if (!song) return null;
 
-  if (song.videoId) return song.videoId;
+  if (song.videoId) return song.videoId
   return extractYoutubeId(song.youtubeUrl || song.videoUrl);
 });
+
+function extractYoutubeId(url) {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
 
 const isFav = computed(() => {
   if (currentSongId.value && favoritesStore.isFavorite(currentSongId.value)) {
     return true;
   }
-
   if (currentVideoId.value && favoritesStore.favoriteList) {
     return favoritesStore.favoriteList.some(s => s.videoId === currentVideoId.value);
   }
-
   return false;
 });
 
@@ -138,56 +151,32 @@ function handleToggleFavorite() {
 const displayArtist = computed(() => {
   const d = props.songDetails;
   if (!d) return '';
-
   const dbAuthors = d.song?.authors || d.authors;
-  if (Array.isArray(dbAuthors) && dbAuthors.length > 0) {
-    return dbAuthors.join(', ');
-  }
-
-  if (d.artist && d.artist !== 'Nieznany wykonawca') {
-    return d.artist;
-  }
+  if (Array.isArray(dbAuthors) && dbAuthors.length > 0) return dbAuthors.join(', ');
+  if (d.artist && d.artist !== 'Nieznany wykonawca') return d.artist;
 
   const fullTitle = d.song?.title || d.title || '';
-  if (fullTitle.includes(' - ')) {
-    return fullTitle.split(' - ')[0].trim();
-  } else if (fullTitle.includes(':')) {
-    return fullTitle.split(':')[0].trim();
-  }
-
-  return null;
+  const extracted = extractTitle(fullTitle, '');
+  return extracted.artist || 'Nieznany wykonawca';
 });
 
 const displayTitle = computed(() => {
   const d = props.songDetails;
   if (!d) return '';
-
   const fullTitle = d.song?.title || d.title || '';
 
-  if (displayArtist.value && fullTitle.includes(displayArtist.value)) {
-    let cleanName = fullTitle;
-
-    if (fullTitle.includes(' - ')) {
-      const parts = fullTitle.split(' - ');
-      if (parts.length >= 2) cleanName = parts[1];
-    } else if (fullTitle.includes(':')) {
-      const parts = fullTitle.split(':');
-      if (parts.length >= 2) cleanName = parts[1];
-    }
-
-    return cleanName
-        .replace(/\(Karaoke Version\)/yi, '')
-        .replace(/\(Official Video\)/yi, '')
-        .replace(/\[.*?\]/g, '')
-        .trim();
-  }
-
-  return fullTitle;
+  const extracted = extractTitle(fullTitle, d.artist);
+  return extracted.title;
 });
 
 const sortedLyricLines = computed(() => {
-  const lines = props.songDetails?.lyricLines || props.songDetails?.song?.lyricLines;
-  if (lines) {
+  let lines = props.songDetails?.lyricLines || props.songDetails?.song?.lyricLines;
+
+  if (!lines || lines.length === 0) {
+    lines = fetchedLyricLines.value;
+  }
+
+  if (lines && lines.length > 0) {
     return [...lines].sort((a, b) => a.timeStampStart - b.timeStampStart);
   }
   return [];
@@ -196,14 +185,70 @@ const sortedLyricLines = computed(() => {
 const videoId = computed(() => currentVideoId.value);
 
 const activeLineIndex = computed(() => {
+  if (!sortedLyricLines.value || sortedLyricLines.value.length === 0) return -1;
+
   const index = sortedLyricLines.value.findIndex(line =>
       currentTime.value >= line.timeStampStart && currentTime.value < line.timeStampEnd
   );
-  if (index === -1 && currentTime.value > 0 && sortedLyricLines.value.length > 0) {
-    return sortedLyricLines.value.findIndex(line => line.timeStampEnd > currentTime.value);
+  if (index === -1 && currentTime.value > 0) {
+    return sortedLyricLines.value.findLastIndex(line => line.timeStampEnd <= currentTime.value);
   }
   return index;
 });
+
+const loadLyrics = async () => {
+  fetchedLyricLines.value = []; // Reset
+  const song = props.songDetails;
+  if (!song) return;
+
+  const existingLines = song.lyricLines || song.song?.lyricLines;
+  if (existingLines && existingLines.length > 0) {
+    console.log("Używam napisów z bazy danych.");
+    return;
+  }
+
+  const rawLrc = song.lyrics || song.song?.lyrics;
+  if (rawLrc && rawLrc.includes('[')) {
+    console.log("Parsuję surowe LRC z bazy.");
+    const parsed = parseLRC(rawLrc);
+    fetchedLyricLines.value = mapParsedToPlayerFormat(parsed);
+    return;
+  }
+
+  isLyricsLoading.value = true;
+  try {
+    const normalized = normalizeSong(song);
+    const searchData = extractTitle(normalized.title, normalized.artist);
+
+    console.log(`Pobieram napisy dla: ${searchData.artist} - ${searchData.title}`);
+
+    const lrcFromApi = await fetchSyncedLyrics(
+        searchData.artist,
+        searchData.title,
+        normalized.duration
+    );
+
+    if (lrcFromApi) {
+      const parsed = parseLRC(lrcFromApi);
+      fetchedLyricLines.value = mapParsedToPlayerFormat(parsed);
+    }
+  } catch (e) {
+    console.error("Błąd pobierania napisów:", e);
+  } finally {
+    isLyricsLoading.value = false;
+  }
+};
+
+function mapParsedToPlayerFormat(parsedLines) {
+  return parsedLines.map((line, index, array) => {
+    const nextLine = array[index + 1];
+    return {
+      text: line.text,
+      timeStampStart: line.time,
+      timeStampEnd: nextLine ? nextLine.time : line.time + 5
+    };
+  });
+}
 
 const scrollToActiveLine = (behavior = 'smooth') => {
   if (activeLineRef.value && teleprompterRef.value) {
@@ -315,13 +360,13 @@ watch(videoId, async (newId) => {
 }, { immediate: true });
 
 watch(() => props.songDetails, async (newVal) => {
-  if (newVal && !videoId.value) {
-    stopPlaybackTimer();
-    if (player.value) {
-      try { player.value.destroy(); } catch (e) {}
-      player.value = null;
+  if (newVal) {
+    if (!videoId.value) {
+      stopPlaybackTimer();
+      if (player.value) { try { player.value.destroy(); } catch (e) {} }
+      currentTime.value = 0;
     }
-    currentTime.value = 0;
+    await loadLyrics();
   }
 }, { immediate: true });
 
@@ -334,7 +379,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-
 * {
   box-sizing: border-box;
 }
@@ -371,10 +415,35 @@ onUnmounted(() => {
   letter-spacing: -0.5px;
 }
 
-.meta-tags { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
-.tag { background: rgba(255, 255, 255, 0.15); padding: 6px 15px; border-radius: 25px; font-size: 0.95rem; color: #e0e0e0; display: flex; align-items: center; gap: 8px; font-weight: 500; border: 1px solid rgba(255, 255, 255, 0.1); }
-.tag.artist { color: #8a7aff; background: rgba(138, 122, 255, 0.15); }
-.tag.category { color: #ff85a2; background: rgba(255, 133, 162, 0.15); }
+.meta-tags {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 6px 15px;
+  border-radius: 25px;
+  font-size: 0.95rem;
+  color: #e0e0e0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tag.artist {
+  color: #8a7aff;
+  background: rgba(138, 122, 255, 0.15);
+}
+
+.tag.category {
+  color: #ff85a2;
+  background: rgba(255, 133, 162, 0.15);
+}
 
 .video-player-wrapper {
   width: 100%;
@@ -386,12 +455,10 @@ onUnmounted(() => {
   border: 2px solid rgba(255, 255, 255, 0.08);
   position: relative;
 }
-.youtube-target { width: 100%; height: 100%; }
 
-.custom-audio {
-  filter: invert(1) hue-rotate(180deg);
-  border-radius: 30px;
-  height: 40px;
+.youtube-target {
+  width: 100%;
+  height: 100%;
 }
 
 .youtube-placeholder {
@@ -408,41 +475,199 @@ onUnmounted(() => {
   color: #ff0000 !important;
 }
 
-.no-video-placeholder {
-  display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: rgba(30,30,30,0.9); color: #aab2c2; font-style: italic; font-size: 1.3rem; gap: 15px;
+.no-video-placeholder i {
+  font-size: 4rem;
+  color: #6C63FF;
+  opacity: 0.7;
 }
-.no-video-placeholder i { font-size: 4rem; color: #6C63FF; opacity: 0.7; }
 
-.lyrics-display { background: #121214; border-radius: 15px; position: relative; overflow: hidden; height: 200px; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); border: 1px solid rgba(255, 255, 255, 0.05); }
+.loading i {
+  font-size: 3rem;
+  color: #8a7aff;
+}
 
-.teleprompter-container { height: 100%; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; scroll-behavior: smooth; position: relative; display: flex; flex-direction: column; justify-content: center; }
-.teleprompter-container::-webkit-scrollbar { display: none; }
-.teleprompter-content { display: flex; flex-direction: column; align-items: center; padding: 100px 0; min-height: 100%; }
+.loading p {
+  color: #aab2c2;
+  font-style: italic;
+  font-size: 1.1rem;
+}
 
-.line { font-size: 1.4rem; color: #777; margin: 12px 0; transition: all 0.2s ease-out; cursor: pointer; text-align: center; padding: 0 25px; font-weight: 500; opacity: 0.3; transform: scale(0.9); line-height: 1.4; }
-.line:hover { color: #aaa; opacity: 0.5; }
-.line.active { color: #fff; font-size: 2.2rem; opacity: 1; transform: scale(1.15); text-shadow: 0 0 25px rgba(108, 99, 255, 0.7), 0 0 10px rgba(255, 255, 255, 0.3); font-weight: 900; letter-spacing: 0.5px; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
-.line.past { color: #3a3a3a; opacity: 0.2; font-size: 1.2rem; transform: scale(0.85); }
-.line.future { color: #555; opacity: 0.4; font-size: 1.3rem; transform: scale(0.95); }
+.lyrics-display {
+  background: #121214;
+  border-radius: 15px;
+  position: relative;
+  overflow: hidden;
 
-.gradient-overlay { position: absolute; left: 0; right: 0; height: 80px; pointer-events: none; z-index: 2; }
-.gradient-overlay.top { top: 0; background: linear-gradient(to bottom, #121214 0%, transparent 100%); }
-.gradient-overlay.bottom { bottom: 0; background: linear-gradient(to top, #121214 0%, transparent 100%); }
+  height: 200px;
 
-.fallback-lyrics { padding: 20px; height: 100%; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ccc; }
-.fallback-lyrics::-webkit-scrollbar { display: none; }
-.info-text { color: #FF6584; margin-bottom: 15px; font-style: italic; font-size: 1.1em; }
-.fallback-lyrics pre { white-space: pre-wrap; color: #b0b0b0; font-family: 'Fira Code', monospace; text-align: center; line-height: 1.8; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; max-height: 150px; overflow-y: auto; }
-.fallback-lyrics.empty { justify-content: center; color: #555; font-size: 1.3rem; }
-.fallback-lyrics.empty i { font-size: 4.5rem; margin-bottom: 20px; color: #6C63FF; opacity: 0.6; }
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
 
-.no-song-selected { display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(30,30,30,0.4); color: #aab2c2; font-size: 1.7rem; padding: 40px; height: 500px; border-radius: 20px; border: 2px dashed rgba(255,255,255,0.1); box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
-.spin-animation { font-size: 5rem; margin-bottom: 25px; animation: spin 6s linear infinite; opacity: 0.4; color: #6C63FF; }
-.btn-favorite { background: none; border: none; cursor: pointer; font-size: 1.8rem; padding: 0; color: #aab2c2; transition: color 0.3s, transform 0.2s; }
-.btn-favorite:hover { color: #fff; transform: scale(1.1); }
-.btn-favorite.is-favorite { color: #FF6584; animation: favorite-pop 0.3s ease-out; }
-.btn-favorite.is-favorite i { filter: drop-shadow(0 0 5px rgba(255, 101, 132, 0.7)); }
+.teleprompter-container {
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
 
-@keyframes favorite-pop { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1.1); } }
-@keyframes spin { 100% { transform: rotate(360deg); } }
+.teleprompter-container::-webkit-scrollbar {
+  display: none;
+}
+
+.teleprompter-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 100px 0;
+  min-height: 100%;
+}
+
+.line {
+  margin: 12px 0;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  cursor: pointer;
+  text-align: center;
+  padding: 0 25px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  max-width: 90%;
+
+  font-size: 1.4rem;
+  color: #777;
+  opacity: 0.3;
+  transform: none;
+}
+
+.line:hover {
+  color: #aaa;
+  opacity: 0.5;
+}
+
+.line.active {
+  color: #fff;
+  opacity: 1;
+  font-size: 2.2rem;
+  text-shadow: 0 0 25px rgba(108, 99, 255, 0.7), 0 0 10px rgba(255, 255, 255, 0.3);
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  margin: 20px 0;
+}
+
+.line.past {
+  color: #3a3a3a;
+  opacity: 0.2;
+  font-size: 1.2rem;
+}
+
+.line.future {
+  color: #555;
+  opacity: 0.4;
+  font-size: 1.3rem;
+}
+
+.fallback-lyrics {
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #ccc;
+}
+
+.fallback-lyrics::-webkit-scrollbar {
+  display: none;
+}
+
+.fallback-lyrics pre {
+  white-space: pre-wrap;
+  color: #b0b0b0;
+  font-family: 'Fira Code', monospace;
+  text-align: center;
+  line-height: 1.8;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 15px;
+  border-radius: 8px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.fallback-lyrics.empty {
+  justify-content: center;
+  color: #555;
+  font-size: 1.3rem;
+}
+
+.fallback-lyrics.empty i {
+  font-size: 4.5rem;
+  margin-bottom: 20px;
+  color: #6C63FF;
+  opacity: 0.6;
+}
+
+.no-song-selected {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: rgba(30, 30, 30, 0.4);
+  color: #aab2c2;
+  font-size: 1.7rem;
+  padding: 40px;
+  height: 500px;
+  border-radius: 20px;
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+}
+
+.spin-animation {
+  font-size: 5rem;
+  margin-bottom: 25px;
+  animation: spin 6s linear infinite;
+  opacity: 0.4;
+  color: #6C63FF;
+}
+
+.btn-favorite {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.8rem;
+  padding: 0;
+  color: #aab2c2;
+  transition: color 0.3s, transform 0.2s;
+}
+
+.btn-favorite:hover {
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.btn-favorite.is-favorite {
+  color: #FF6584;
+  animation: favorite-pop 0.3s ease-out;
+}
+
+.btn-favorite.is-favorite i {
+  filter: drop-shadow(0 0 5px rgba(255, 101, 132, 0.7));
+}
+
+@keyframes favorite-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1.1); }
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
 </style>
