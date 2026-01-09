@@ -1,9 +1,6 @@
 package com.karaokeapp.karaoke_backend.services;
 import com.karaokeapp.karaoke_backend.dto.*;
-import com.karaokeapp.karaoke_backend.models.Author;
-import com.karaokeapp.karaoke_backend.models.Song;
-import com.karaokeapp.karaoke_backend.models.Suggestion;
-import com.karaokeapp.karaoke_backend.models.User;
+import com.karaokeapp.karaoke_backend.models.*;
 import com.karaokeapp.karaoke_backend.repositories.CategoryRepository;
 import com.karaokeapp.karaoke_backend.repositories.SongRepository;
 import com.karaokeapp.karaoke_backend.repositories.SuggestionRepository;
@@ -139,11 +136,14 @@ public class SongService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Zalogowany użytkownik nie istnieje."));
 
-
         Suggestion suggestion = new Suggestion();
         suggestion.setSong(song);
         suggestion.setUser(user);
-        suggestion.setProposedContent(dto.getProposedContent());
+        suggestion.setProposedLyrics(dto.getProposedLyrics());
+        suggestion.setProposedGenre(dto.getProposedGenre());
+        suggestion.setProposedAuthorIds(dto.getProposedAuthorIds());
+        suggestion.setProposedCategoryIds(dto.getProposedCategoryIds());
+        suggestion.setStatus(SuggestionStatus.PENDING);
 
         suggestionRepository.save(suggestion);
     }

@@ -1,6 +1,9 @@
 package com.karaokeapp.karaoke_backend.security;
 
-import com.karaokeapp.karaoke_backend.services.JwtService; // Używamy ujednoliconej nazwy
+import com.karaokeapp.karaoke_backend.services.JwtService;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,29 +41,50 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-
         jwt = authHeader.substring(7);
-        username = jwtService.extractUsername(jwt);
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        try {
+            username = jwtService.extractUsername(jwt);
 
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
-            if (jwtService.isTokenValid(jwt, userDetails)) {
-
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
-
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                if (jwtService.isTokenValid(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request)
+                    );
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+        } catch (MalformedJwtException e) {
+
+            logger.error("Nieprawidłowy format tokena JWT: " + e.getMessage());
+            handleException(response, "Token JWT jest źle sformatowany.");
+            return;
+        } catch (ExpiredJwtException e) {
+            logger.error("Token JWT wygasł: " + e.getMessage());
+            handleException(response, "Token JWT wygasł. Zaloguj się ponownie.");
+            return;
+        } catch (SignatureException e) {
+            logger.error("Nieprawidłowy podpis tokena: " + e.getMessage());
+            handleException(response, "Nieprawidłowy podpis tokena JWT.");
+            return;
+        } catch (Exception e) {
+            logger.error("Błąd podczas przetwarzania tokena: " + e.getMessage());
+            handleException(response, "Błąd autoryzacji.");
+            return;
         }
 
         filterChain.doFilter(request, response);
+    }
+    private void handleException(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"error\": \"" + message + "\"}");
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {

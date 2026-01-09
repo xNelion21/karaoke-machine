@@ -1,4 +1,5 @@
 package com.karaokeapp.karaoke_backend.controllers;
+import com.karaokeapp.karaoke_backend.dto.SuggestionResponseDTO;
 import com.karaokeapp.karaoke_backend.dto.UserResponseDTO;
 import com.karaokeapp.karaoke_backend.models.Suggestion;
 import com.karaokeapp.karaoke_backend.models.SuggestionStatus;
@@ -26,9 +27,8 @@ public class AdminController {
     }
 
     @GetMapping("/suggestions/pending")
-    public ResponseEntity<List<Suggestion>> getPendingSuggestions() {
-        List<Suggestion> suggestions = adminService.getPendingSuggestions();
-        return ResponseEntity.ok(suggestions);
+    public ResponseEntity<List<SuggestionResponseDTO>> getPendingSuggestions() {
+        return ResponseEntity.ok(adminService.getPendingSuggestions());
     }
 
     @PutMapping("/users/{id}/lock")
