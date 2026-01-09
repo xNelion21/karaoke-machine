@@ -8,5 +8,5 @@ import java.util.List;
 
 public interface SuggestionRepository extends JpaRepository<Suggestion, Long> {
 
-    List<Suggestion> findAllByStatus(SuggestionStatus status);
+    List<Suggestion> findByStatus(SuggestionStatus status);
 }
