@@ -37,52 +37,41 @@ const routes = [
             {
                 path: '',
                 name: 'admin-dashboard',
-                component: () => import('@/views/admin/AdminDashboard.vue'),
+                component: () => import('@/views/admin/StatsPage.vue'),
                 meta: { title: 'Panel administratora' }
             },
             {
                 path: 'users',
                 name: 'admin-users',
-                component: () => import('@/views/admin/UsersPage.vue'),
-                meta: { title: 'Użytkownicy' }
+                component: () => import('@/views/admin/UsersPage.vue')
             },
             {
                 path: 'songs',
                 name: 'admin-songs',
-                component: () => import('@/views/admin/SongsPage.vue'),
-                meta: { title: 'Zarządzanie piosenkami' }
+                component: () => import('@/views/admin/SongsPage.vue')
             },
             {
                 path: 'authors',
                 name: 'admin-authors',
-                component: () => import('@/views/admin/AuthorPage.vue'),
-                meta: { title: 'Zarządzanie autorami' }
+                component: () => import('@/views/admin/AuthorPage.vue')
             },
             {
                 path: 'categories',
                 name: 'admin-categories',
-                component: () => import('@/views/admin/CategoryPage.vue'),
-                meta: { title: 'Kategorie piosenek' }
+                component: () => import('@/views/admin/CategoryPage.vue')
             },
             {
                 path: 'suggestions',
                 name: 'admin-suggestions',
-                component: () => import('@/views/admin/SuggestionsPage.vue'),
-                meta: { title: 'Sugestie' }
-            },
-            {
-                path: 'logs',
-                name: 'admin-logs',
-                component: () => import('@/views/admin/LogsPage.vue'),
-                meta: { title: 'Logi administratorów' }
+                component: () => import('@/views/admin/SuggestionsPage.vue')
             },
             {
                 path: 'stats',
                 name: 'admin-stats',
-                component: () => import('@/views/admin/StatsPage.vue'),
-                meta: { title: 'Statystyki' }
+                component: () => import('@/views/admin/StatsPage.vue')
             }
         ]
+
     }
 ]
 

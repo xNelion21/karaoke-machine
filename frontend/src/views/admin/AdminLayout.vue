@@ -14,8 +14,8 @@
 
             <nav class="sidebar-nav">
 
-              <router-link class="sidebar-link" :to="{ name: 'admin-dashboard' }">
-                <i class="bi bi-speedometer2 me-2"></i> Dashboard
+              <router-link class="sidebar-link" :to="{ name: 'admin-stats' }">
+                <i class="bi bi-bar-chart-fill me-2"></i> Statystyki
               </router-link>
 
               <router-link class="sidebar-link" :to="{ name: 'admin-users' }">
@@ -36,14 +36,6 @@
 
               <router-link class="sidebar-link" :to="{ name: 'admin-suggestions' }">
                 <i class="bi bi-lightbulb-fill me-2"></i> Sugestie
-              </router-link>
-
-              <router-link class="sidebar-link" :to="{ name: 'admin-logs' }">
-                <i class="bi bi-journal-text me-2"></i> Logi
-              </router-link>
-
-              <router-link class="sidebar-link" :to="{ name: 'admin-stats' }">
-                <i class="bi bi-bar-chart-fill me-2"></i> Statystyki
               </router-link>
 
             </nav>
