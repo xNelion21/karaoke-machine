@@ -26,6 +26,7 @@ public class AdminController {
         return ResponseEntity.ok(users);
     }
 
+
     @GetMapping("/suggestions/pending")
     public ResponseEntity<List<SuggestionResponseDTO>> getPendingSuggestions() {
         return ResponseEntity.ok(adminService.getPendingSuggestions());
@@ -40,7 +41,6 @@ public class AdminController {
         return ResponseEntity.ok(updatedUser);
     }
 
-    //xzrobic endpoint do zmiany roli z panelu admina i sprawdzic blokowanie
     @PutMapping("/suggestions/{id}/status")
     public ResponseEntity<Void> processSuggestion(
             @PathVariable Long id,
@@ -59,6 +59,16 @@ public class AdminController {
         } else {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+
+    @PatchMapping("/users/{userId}/role")
+    public ResponseEntity<String> updateUserRole(
+            @PathVariable Long userId,
+            @RequestParam String role) {
+
+        adminService.updateUserRole(userId, role);
+        return ResponseEntity.ok("Rola użytkownika została pomyślnie zmieniona na: " + role.toUpperCase());
     }
 
 }

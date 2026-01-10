@@ -11,4 +11,5 @@ public class UserResponseDTO {
     private String email;
     private Role role;
     private Set<Long> likedSongIds;
+    private boolean locked;
 }

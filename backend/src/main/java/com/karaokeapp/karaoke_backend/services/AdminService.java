@@ -2,10 +2,8 @@ package com.karaokeapp.karaoke_backend.services;
 
 import com.karaokeapp.karaoke_backend.dto.SuggestionResponseDTO;
 import com.karaokeapp.karaoke_backend.models.*;
-import com.karaokeapp.karaoke_backend.repositories.AuthorRepository;
-import com.karaokeapp.karaoke_backend.repositories.CategoryRepository;
-import com.karaokeapp.karaoke_backend.repositories.SongRepository;
-import com.karaokeapp.karaoke_backend.repositories.SuggestionRepository;
+import com.karaokeapp.karaoke_backend.repositories.*;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +20,8 @@ public class AdminService {
     private final SongRepository songRepository;
     private final AuthorRepository authorRepository;
     private final CategoryRepository categoryRepository;
+    private final UserRepository userRepository;
+
 
     public List<SuggestionResponseDTO> getPendingSuggestions() {
         return suggestionRepository.findByStatus(SuggestionStatus.PENDING)
@@ -77,4 +77,21 @@ public class AdminService {
 
         }
     }
+
+    @Transactional
+    public void updateUserRole(Long userId, String newRole) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Użytkownik o ID " + userId + " nie istnieje"));
+        String formattedRole = newRole.toUpperCase();
+        if (!formattedRole.startsWith("ROLE_")) {
+            formattedRole = "ROLE_" + formattedRole;
+        }
+        try {
+            user.setRole(Role.valueOf(formattedRole));
+            userRepository.save(user);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Nieprawidłowa rola. Dozwolone: ROLE_USER, ROLE_ADMIN");
+        }
+    }
+
 }
