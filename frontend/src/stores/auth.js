@@ -22,6 +22,7 @@ export const useAuthStore = defineStore('auth', {
         async login(credentials, rememberMe) {
             this.isLoading = true;
             this.errorMessage = null;
+
             try {
                 const response = await axios.post('/auth/login', credentials);
                 const token = response.data.accessToken;
@@ -37,14 +38,23 @@ export const useAuthStore = defineStore('auth', {
 
                 await this.fetchUser();
 
+                if (this.user.locked) {
+                    this.errorMessage = "Twoje konto zostało zablokowane.";
+                    this.logout();
+                    return false;
+                }
+
                 return true;
+
             } catch (error) {
                 this.errorMessage = error.response?.data?.message || 'Nieprawidłowa nazwa użytkownika lub hasło.';
                 return false;
+
             } finally {
                 this.isLoading = false;
             }
-        },
+        }
+        ,
 
         async register(credentials) {
             this.isLoading = true;

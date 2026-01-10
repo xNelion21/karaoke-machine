@@ -4,35 +4,12 @@
       <router-link to="/" class="navbar-brand mx-md-3">Singly</router-link>
 
       <div class="d-flex align-items-center">
-
-        <div class="nav-item dropdown me-3 lang-dropdown" ref="langDropdownRef">
-          <a class="nav-link dropdown-toggle d-flex align-items-center"
-             href="#"
-             role="button"
-             @click="toggleLangDropdown"
-             :aria-expanded="isLangDropdownOpen ? 'true' : 'false'">
-            <span class="fs-5">{{ currentFlag }}</span>
-          </a>
-          <ul class="dropdown-menu dropdown-menu-end lang-menu" :class="{ show: isLangDropdownOpen }">
-            <li>
-              <a class="dropdown-item d-flex align-items-center" href="#" @click.prevent="changeLanguage('pl')">
-                <span class="fs-5 me-2">🇵🇱</span> Polski
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item d-flex align-items-center" href="#" @click.prevent="changeLanguage('en')">
-                <span class="fs-5 me-2">🇬🇧</span> English
-              </a>
-            </li>
-          </ul>
-        </div>
-
         <template v-if="!authStore.isAuthenticated">
           <button @click="goLogin" class="btn btn-outline-light me-3">
-            {{ $t('nav.login') }}
+            Zaloguj się
           </button>
           <button @click="goRegister" class="btn btn-primary">
-            {{ $t('nav.register') }}
+            Zarejestruj się
           </button>
         </template>
 
@@ -46,19 +23,29 @@
                :aria-expanded="isProfileDropdownOpen ? 'true' : 'false'">
               <i class="bi bi-person-circle fs-4 me-2"></i>
             </a>
-            <ul class="dropdown-menu dropdown-menu-end" :class="{ show: isProfileDropdownOpen }" aria-labelledby="profileDropdown">
+            <ul class="dropdown-menu dropdown-menu-end" :class="{ show: isProfileDropdownOpen }">
+              <li>
+                <span class="dropdown-item-text fw-bold">Zalogowany jako: </span>
+                <span class="dropdown-item-text fw-bold text-primary text-truncate">{{ authStore.username }}</span>
+              </li>
+
+              <li><hr class="dropdown-divider"></li>
+
+              <li v-if="authStore.user?.role === 'ROLE_ADMIN'">
+                <router-link to="/admin" class="dropdown-item fw-bold">
+                  <i class="bi bi-gear me-2"></i> Panel administratora
+                </router-link>
+              </li>
+
+              <li><hr class="dropdown-divider"></li>
 
               <li>
-                <span class="dropdown-item-text fw-bold">{{ $t('nav.logged_as') }}</span>
-                <span class="dropdown-item-text fw-bold text-primary text-truncate">{{ authStore.username || $t('nav.loading') }}</span>
-              </li>
-              <li><hr class="dropdown-divider"></li>
-              <li>
                 <a class="dropdown-item text-danger fw-bold" href="#" @click.prevent="handleLogout">
-                  <i class="bi bi-box-arrow-right me-2 bold"></i> {{ $t('nav.logout') }}
+                  <i class="bi bi-box-arrow-right me-2"></i> Wyloguj się
                 </a>
               </li>
             </ul>
+
           </div>
         </template>
       </div>
@@ -67,10 +54,9 @@
 </template>
 
 <script setup>
-import {ref, onMounted, onUnmounted, computed} from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { useI18n } from 'vue-i18n'
 
 defineProps({
   showSearch: {
@@ -78,27 +64,6 @@ defineProps({
     default: false
   }
 })
-
-const { locale } = useI18n()
-
-const isLangDropdownOpen = ref(false)
-const langDropdownRef = ref(null)
-
-const currentFlag = computed(() => {
-  return locale.value === 'pl' ? '🇵🇱' : '🇬🇧'
-})
-
-const toggleLangDropdown = (event) => {
-  if(event) event.preventDefault()
-  isLangDropdownOpen.value = !isLangDropdownOpen.value
-  isProfileDropdownOpen.value = false
-}
-
-const changeLanguage = (lang) => {
-  locale.value = lang
-  localStorage.setItem('user-locale', lang)
-  isLangDropdownOpen.value = false
-}
 
 const router = useRouter()
 const authStore = useAuthStore()

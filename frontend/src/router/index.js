@@ -28,6 +28,50 @@ const routes = [
         name: 'app',
         component: () => import('../views/AppView.vue'),
         meta: { title: 'Twoja aplikacja Karaoke', requiresAuth: true }
+    },
+    {
+        path: '/admin',
+        component: () => import('@/views/admin/AdminLayout.vue'),
+        meta: { requiresAuth: true, requiresAdmin: true },
+        children: [
+            {
+                path: '',
+                name: 'admin-dashboard',
+                component: () => import('@/views/admin/StatsPage.vue'),
+                meta: { title: 'Panel administratora' }
+            },
+            {
+                path: 'users',
+                name: 'admin-users',
+                component: () => import('@/views/admin/UsersPage.vue')
+            },
+            {
+                path: 'songs',
+                name: 'admin-songs',
+                component: () => import('@/views/admin/SongsPage.vue')
+            },
+            {
+                path: 'authors',
+                name: 'admin-authors',
+                component: () => import('@/views/admin/AuthorPage.vue')
+            },
+            {
+                path: 'categories',
+                name: 'admin-categories',
+                component: () => import('@/views/admin/CategoryPage.vue')
+            },
+            {
+                path: 'suggestions',
+                name: 'admin-suggestions',
+                component: () => import('@/views/admin/SuggestionsPage.vue')
+            },
+            {
+                path: 'stats',
+                name: 'admin-stats',
+                component: () => import('@/views/admin/StatsPage.vue')
+            }
+        ]
+
     }
 ]
 
@@ -36,14 +80,25 @@ const router = createRouter({
     routes
 })
 
-router.beforeEach((to, from, next) => {
-   const authStore = useAuthStore();
 
-    if (to.meta.requiresAuth && (!authStore.isAuthenticated)) {
-        next('/login')
-    } else {
-        next()
+router.beforeEach(async (to, from, next) => {
+    const auth = useAuthStore()
+
+    if (to.meta.requiresAuth && !auth.token) {
+        return next('/login')
     }
+
+    if (to.meta.requiresAdmin) {
+        if (!auth.user) {
+            await auth.fetchUser()
+        }
+
+        if (auth.user?.role !== 'ROLE_ADMIN') {
+            return next('/')
+        }
+    }
+
+    next()
 })
 
 router.afterEach((to) => {
@@ -51,4 +106,3 @@ router.afterEach((to) => {
 })
 
 export default router
-
