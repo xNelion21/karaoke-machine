@@ -26,7 +26,6 @@
           <i class="bi bi-music-note-beamed"></i> {{ category }}
           </span>
         </template>
-
       </div>
     </div>
 
@@ -34,9 +33,20 @@
       <div ref="youtubeTarget" class="youtube-target"></div>
     </div>
 
+
     <div class="lyrics-display">
 
-      <div v-if="isLyricsLoading" class="fallback-lyrics loading">
+      <div v-if="availableVersions.length > 1" class="version-control-wrapper">
+        <button @click="tryNextVersion" class="btn-version">
+        <span class="version-counter">
+          {{ currentVersionIndex + 1 }} / {{ availableVersions.length }}
+        </span>
+          <span class="version-label">{{ $t ('player.diff_text')}}</span>
+          <i class="bi bi-arrow-repeat icon-refresh"></i>
+        </button>
+      </div>
+
+      <div v-if="isLyricsLoading && sortedLyricLines.length === 0" class="fallback-lyrics loading">
         <i class="bi bi-arrow-repeat spin-animation"></i>
         <p class="mt-3">{{  $t('app.loading') }}</p>
       </div>
@@ -60,21 +70,14 @@
         </div>
       </div>
 
-      <div v-else-if="videoId" class="fallback-lyrics youtube-placeholder">
-        <i class="bi bi-youtube text-danger mb-3" style="font-size: 3rem;"></i>
-        <h5 class="fw-bold">{{ $t('player.youtube_karaoke') }}</h5>
-        <p class="text-light small">{{ $t('player.youtube_text') }}</p>
-      </div>
-
       <div v-else-if="songDetails.song?.lyrics || songDetails.lyrics" class="fallback-lyrics">
         <pre>{{ songDetails.song?.lyrics || songDetails.lyrics }}</pre>
       </div>
 
-      <div v-else class="fallback-lyrics empty">
+      <div v-else-if="!isLyricsLoading" class="fallback-lyrics empty">
         <i class="bi bi-music-note-list"></i>
         <p>{{ $t('player.no_text') }}</p>
       </div>
-
     </div>
 
   </div>
@@ -89,7 +92,7 @@ import { ref, computed, watch, onUnmounted, nextTick } from 'vue';
 import { useFavoritesStore } from '@/stores/favorites';
 import { fetchSyncedLyrics } from '@/services/lyricsService';
 import { parseLRC } from '@/utils/lrcParser';
-import { normalizeSong, extractTitle } from '@/utils/songUtils';
+import { normalizeSong, extractYoutubeId } from '@/utils/songUtils';
 
 const emit = defineEmits(['favorite-toggled']);
 
@@ -110,64 +113,42 @@ const activeLineRef = ref(null);
 let playbackInterval = null;
 
 const fetchedLyricLines = ref([]);
-const isLyricsLoading = ref(false);
+const isLyricsLoading = ref(true);
 
-const currentSongId = computed(() => {
-  return props.songDetails?.id || props.songDetails?.song?.id;
-});
+const availableVersions = ref([]);
+const currentVersionIndex = ref(0);
+
+const currentSongId = computed(() => props.songDetails?.id || props.songDetails?.song?.id);
 
 const currentVideoId = computed(() => {
   const song = props.songDetails?.song || props.songDetails;
   if (!song) return null;
-
-  if (song.videoId) return song.videoId
+  if (song.videoId) return song.videoId;
   return extractYoutubeId(song.youtubeUrl || song.videoUrl);
 });
 
-function extractYoutubeId(url) {
-  if (!url) return null;
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  const match = url.match(regExp);
-  return (match && match[2].length === 11) ? match[2] : null;
-}
-
 const isFav = computed(() => {
-  if (currentSongId.value && favoritesStore.isFavorite(currentSongId.value)) {
-    return true;
-  }
+  if (currentSongId.value && favoritesStore.isFavorite(currentSongId.value)) return true;
   if (currentVideoId.value && favoritesStore.favoriteList) {
     return favoritesStore.favoriteList.some(s => s.videoId === currentVideoId.value);
   }
   return false;
 });
 
-function handleToggleFavorite() {
-  if (props.songDetails) {
-    favoritesStore.toggleFavorite(props.songDetails);
-    emit('favorite-toggled');
-  }
-}
+const normalizedDetails = computed(() => normalizeSong(props.songDetails));
 
-const displayArtist = computed(() => {
-  const d = props.songDetails;
-  if (!d) return '';
-  const dbAuthors = d.song?.authors || d.authors;
-  if (Array.isArray(dbAuthors) && dbAuthors.length > 0) return dbAuthors.join(', ');
-  if (d.artist && d.artist !== 'Nieznany wykonawca') return d.artist;
+const uniqueSongKey = computed(() => {
+  const details = props.songDetails;
+  if (!details) return null;
 
-  const fullTitle = d.song?.title || d.title || '';
-  const extracted = extractTitle(fullTitle, '');
-  return extracted.artist || 'Nieznany wykonawca';
+  const dbId = details.id || details.song?.id;
+  if (dbId) return dbId;
+
+  return currentVideoId.value;
 });
 
-const displayTitle = computed(() => {
-  const d = props.songDetails;
-  if (!d) return '';
-  const fullTitle = d.song?.title || d.title || '';
-
-  const extracted = extractTitle(fullTitle, d.artist);
-  return extracted.title;
-});
+const displayArtist = computed(() => normalizedDetails.value?.artist || '');
+const displayTitle = computed(() => normalizedDetails.value?.title || '');
 
 const sortedLyricLines = computed(() => {
   let lines = props.songDetails?.lyricLines || props.songDetails?.song?.lyricLines;
@@ -176,17 +157,15 @@ const sortedLyricLines = computed(() => {
     lines = fetchedLyricLines.value;
   }
 
-  if (lines && lines.length > 0) {
-    return [...lines].sort((a, b) => a.timeStampStart - b.timeStampStart);
-  }
-  return [];
+  return (lines && lines.length > 0)
+      ? [...lines].sort((a, b) => a.timeStampStart - b.timeStampStart)
+      : [];
 });
 
 const videoId = computed(() => currentVideoId.value);
 
 const activeLineIndex = computed(() => {
-  if (!sortedLyricLines.value || sortedLyricLines.value.length === 0) return -1;
-
+  if (!sortedLyricLines.value.length) return -1;
   const index = sortedLyricLines.value.findIndex(line =>
       currentTime.value >= line.timeStampStart && currentTime.value < line.timeStampEnd
   );
@@ -196,73 +175,119 @@ const activeLineIndex = computed(() => {
   return index;
 });
 
-const loadLyrics = async () => {
-  fetchedLyricLines.value = []; // Reset
+function handleToggleFavorite() {
+  if (props.songDetails) {
+    favoritesStore.toggleFavorite(props.songDetails);
+    emit('favorite-toggled');
+  }
+}
+
+const loadLyrics = async (durationOverride = null) => {
   const song = props.songDetails;
-  if (!song) return;
+  if (!song) {
+    isLyricsLoading.value = false;
+    return;
+  }
+
+  const targetKey = uniqueSongKey.value;
 
   const existingLines = song.lyricLines || song.song?.lyricLines;
-  if (existingLines && existingLines.length > 0) {
-    console.log("Używam napisów z bazy danych.");
+  if (existingLines?.length > 0) {
+    isLyricsLoading.value = false;
     return;
   }
 
   const rawLrc = song.lyrics || song.song?.lyrics;
-  if (rawLrc && rawLrc.includes('[')) {
-    console.log("Parsuję surowe LRC z bazy.");
-    const parsed = parseLRC(rawLrc);
-    fetchedLyricLines.value = mapParsedToPlayerFormat(parsed);
+  if (rawLrc?.includes('[')) {
+    fetchedLyricLines.value = mapParsedToPlayerFormat(parseLRC(rawLrc));
+    isLyricsLoading.value = false;
     return;
   }
 
-  isLyricsLoading.value = true;
+  if (fetchedLyricLines.value.length === 0) {
+    isLyricsLoading.value = true;
+  }
+
   try {
     const normalized = normalizeSong(song);
-    const searchData = extractTitle(normalized.title, normalized.artist);
+    const { artist, title } = normalized;
+    const searchDuration = durationOverride || normalized.duration;
 
-    console.log(`Pobieram napisy dla: ${searchData.artist} - ${searchData.title}`);
-
-    const lrcFromApi = await fetchSyncedLyrics(
-        searchData.artist,
-        searchData.title,
-        normalized.duration
-    );
-
-    if (lrcFromApi) {
-      const parsed = parseLRC(lrcFromApi);
-      fetchedLyricLines.value = mapParsedToPlayerFormat(parsed);
+    if (!searchDuration) {
+      return;
     }
+
+    let results = await fetchSyncedLyrics(artist, title, searchDuration);
+
+    if (uniqueSongKey.value !== targetKey) {
+      console.log(`[LoadLyrics] Odrzucono wyniki - zmiana piosenki (Target: ${targetKey}, Current: ${uniqueSongKey.value})`);
+      return;
+    }
+
+    if (!Array.isArray(results)) {
+      results = results ? [results] : [];
+    }
+
+    const sortedCandidates = results.sort((a, b) => {
+      const aLen = (a.syncedLyrics || "").length;
+      const bLen = (b.syncedLyrics || "").length;
+      return bLen - aLen;
+    });
+
+    if (sortedCandidates.length > 0) {
+      availableVersions.value = sortedCandidates;
+      if (currentVersionIndex.value >= sortedCandidates.length) currentVersionIndex.value = 0;
+      applyLyricsVersion(currentVersionIndex.value);
+    }
+
   } catch (e) {
-    console.error("Błąd pobierania napisów:", e);
+    console.error("Błąd LoadLyrics:", e);
+    if (uniqueSongKey.value === targetKey) {
+      availableVersions.value = [];
+    }
   } finally {
-    isLyricsLoading.value = false;
+    if (uniqueSongKey.value === targetKey) {
+      isLyricsLoading.value = false;
+    }
   }
 };
 
+const applyLyricsVersion = (index) => {
+  if (!availableVersions.value[index]) return;
+  const selected = availableVersions.value[index];
+
+  const content = selected.syncedLyrics || selected.lyrics;
+  if (content) {
+    fetchedLyricLines.value = mapParsedToPlayerFormat(parseLRC(content));
+  }
+};
+
+const tryNextVersion = () => {
+  const next = currentVersionIndex.value + 1;
+  const target = next < availableVersions.value.length ? next : 0;
+  currentVersionIndex.value = target;
+  applyLyricsVersion(target);
+};
+
 function mapParsedToPlayerFormat(parsedLines) {
-  return parsedLines.map((line, index, array) => {
-    const nextLine = array[index + 1];
-    return {
-      text: line.text,
-      timeStampStart: line.time,
-      timeStampEnd: nextLine ? nextLine.time : line.time + 5
-    };
-  });
+  return parsedLines.map((line, index, arr) => ({
+    text: line.text,
+    timeStampStart: line.time,
+    timeStampEnd: arr[index + 1] ? arr[index + 1].time : line.time + 5
+  }));
 }
+
 
 const scrollToActiveLine = (behavior = 'smooth') => {
   if (activeLineRef.value && teleprompterRef.value) {
-    activeLineRef.value.scrollIntoView({
-      behavior: behavior,
-      block: 'center'
-    });
+    activeLineRef.value.scrollIntoView({ behavior, block: 'center' });
   }
 };
 
 const startPlaybackTimer = () => {
   if (playbackInterval) clearInterval(playbackInterval);
   playbackInterval = setInterval(() => {
-    if (player.value && typeof player.value.getCurrentTime === 'function') {
+    if (player.value?.getCurrentTime) {
       currentTime.value = player.value.getCurrentTime();
       scrollToActiveLine();
     }
@@ -278,111 +303,90 @@ const stopPlaybackTimer = () => {
 
 const loadYouTubeAPI = () => {
   return new Promise(resolve => {
-    if (window.YT && window.YT.Player) {
-      resolve();
-      return;
-    }
+    if (window.YT?.Player) return resolve();
     if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
       const tag = document.createElement('script');
       tag.src = 'https://www.youtube.com/iframe_api';
       document.head.appendChild(tag);
     }
-    const checkInterval = setInterval(() => {
-      if (window.YT && window.YT.Player) {
-        clearInterval(checkInterval);
-        resolve();
-      }
+    const check = setInterval(() => {
+      if (window.YT?.Player) { clearInterval(check); resolve(); }
     }, 100);
   });
 };
 
 const initPlayer = async () => {
-  if (player.value) {
-    try { player.value.destroy(); } catch (e) {}
-    player.value = null;
-  }
-
-  if (!videoId.value) {
-    stopPlaybackTimer();
-    currentTime.value = 0;
-    return;
-  }
+  if (player.value) { try { player.value.destroy(); } catch (e) {} player.value = null; }
+  if (!videoId.value) { stopPlaybackTimer(); currentTime.value = 0; return; }
 
   await loadYouTubeAPI();
   await nextTick();
-
   if (!youtubeTarget.value) return;
 
   player.value = new window.YT.Player(youtubeTarget.value, {
-    height: '100%',
-    width: '100%',
-    videoId: videoId.value,
-    playerVars: {
-      'autoplay': 1,
-      'playsinline': 1,
-      'origin': window.location.origin
-    },
+    height: '100%', width: '100%', videoId: videoId.value,
+    playerVars: { 'autoplay': 1, 'playsinline': 1, 'origin': window.location.origin },
     events: {
       'onReady': (event) => {
         scrollToActiveLine('auto');
         event.target.playVideo();
         startPlaybackTimer();
-      },
-      'onStateChange': (event) => {
-        if (event.data === window.YT.PlayerState.PLAYING) {
-          startPlaybackTimer();
-        } else {
-          stopPlaybackTimer();
+
+        const dur = event.target.getDuration();
+
+        if (dur > 0 && fetchedLyricLines.value.length === 0) {
+          loadLyrics(dur);
         }
-      }
+      },
+      'onStateChange': (e) => e.data === window.YT.PlayerState.PLAYING ? startPlaybackTimer() : stopPlaybackTimer()
     }
   });
 };
 
-const seekTo = (time) => {
-  if (player.value && typeof player.value.seekTo === 'function') {
-    player.value.seekTo(time, true);
-  }
-};
+const seekTo = (time) => player.value?.seekTo(time, true);
+
 
 watch(videoId, async (newId) => {
-  if (newId) {
-    await nextTick();
-    initPlayer();
-  } else {
-    stopPlaybackTimer();
-    if (player.value) {
-      try { player.value.destroy(); } catch (e) {}
-      player.value = null;
-    }
-    currentTime.value = 0;
-  }
+  if (newId) { await nextTick(); initPlayer(); }
+  else { stopPlaybackTimer(); currentTime.value = 0; if(player.value) player.value.destroy(); }
 }, { immediate: true });
 
-watch(() => props.songDetails, async (newVal) => {
-  if (newVal) {
+watch(uniqueSongKey, async (newKey, oldKey) => {
+  if (newKey !== oldKey) {
+    console.log(`[Watcher] Zmiana utworu (Key): ${oldKey} -> ${newKey}`);
+
+    isLyricsLoading.value = true;
+    fetchedLyricLines.value = [];
+    availableVersions.value = [];
+    currentVersionIndex.value = 0;
+
     if (!videoId.value) {
       stopPlaybackTimer();
-      if (player.value) { try { player.value.destroy(); } catch (e) {} }
       currentTime.value = 0;
     }
-    await loadLyrics();
+  }
+
+  if (newKey) {
+    const details = props.songDetails;
+    const hasLocalLyrics = details?.lyrics || details?.song?.lyrics || (details?.lyricLines && details.lyricLines.length > 0);
+    const hasKnownDuration = details?.duration || details?.song?.duration;
+
+    if (hasLocalLyrics || hasKnownDuration) {
+      await loadLyrics();
+    } else {
+      console.log('[Watcher] Brak czasu trwania/tekstu lokalnego. Czekam na YouTube...');
+      isLyricsLoading.value = true;
+    }
   }
 }, { immediate: true });
 
 onUnmounted(() => {
   stopPlaybackTimer();
-  if (player.value) {
-    try { player.value.destroy(); } catch (e) {}
-  }
+  if (player.value) try { player.value.destroy(); } catch (e) {}
 });
 </script>
 
 <style scoped>
-* {
-  box-sizing: border-box;
-}
-
 .karaoke-player-container {
   background: rgba(30, 34, 42, 0.65);
   backdrop-filter: blur(16px);
@@ -460,21 +464,6 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
 }
-
-.youtube-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: #fff;
-  text-align: center;
-}
-
-.text-danger {
-  color: #ff0000 !important;
-}
-
 .no-video-placeholder i {
   font-size: 4rem;
   color: #6C63FF;
@@ -497,11 +486,11 @@ onUnmounted(() => {
   border-radius: 15px;
   position: relative;
   overflow: hidden;
-
   height: 200px;
-
   box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
   border: 1px solid rgba(255, 255, 255, 0.05);
+
+  margin-top: 20px;
 }
 
 .teleprompter-container {
@@ -659,6 +648,71 @@ onUnmounted(() => {
 
 .btn-favorite.is-favorite i {
   filter: drop-shadow(0 0 5px rgba(255, 101, 132, 0.7));
+}
+
+.version-control-wrapper {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 10;
+
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+.btn-version {
+  background: rgba(30, 30, 35, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #aab2c2;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  backdrop-filter: blur(4px);
+  font-family: inherit;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.btn-version:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+}
+
+.btn-version:active {
+  transform: translateY(0);
+}
+
+.icon-refresh {
+  font-size: 1rem;
+  transition: transform 0.5s ease;
+  display: inline-flex;
+  width: 1em;
+  height: 1em;
+}
+
+.btn-version:hover .icon-refresh {
+  transform-origin: center;
+  transform: rotate(180deg);
+  color: #8a7aff;
+}
+
+.version-counter {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.version-label {
+  font-weight: 500;
 }
 
 @keyframes favorite-pop {
