@@ -1,13 +1,3 @@
-// src/utils/songUtils.js
-
-// 1. Nowa funkcja pomocnicza do dekodowania znaków (np. &#39; -> ')
-const decodeHtmlEntities = (text) => {
-    if (!text) return '';
-    const textarea = document.createElement('textarea');
-    textarea.innerHTML = text;
-    return textarea.value;
-};
-
 export const extractYoutubeId = (urlOrId) => {
     if (!urlOrId) return null;
     if (urlOrId.length === 11) return urlOrId;
