@@ -47,12 +47,15 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {useAuthStore} from "@/stores/auth.js";
 import {storeToRefs} from "pinia";
+import { useFacebook } from "@/composables/useFacebook.js";
 
 const username = ref('')
 const password = ref('')
 const rememberMe = ref(false)
 const router = useRouter()
 const authStore = useAuthStore()
+
+const { login: fbLogin } = useFacebook();
 
 const { errorMessage } = storeToRefs(authStore)
 
@@ -67,9 +70,21 @@ const handleLogin = async () => {
   }
 }
 
-const handleFacebookLogin = () => {
-  window.location.href = 'http://localhost:8080/oauth2/authorization/facebook';
-}
+const handleFacebookLogin = async () => {
+  try {
+    const fbUserData = await fbLogin();
+
+    console.log("Dane z FB:", fbUserData);
+
+    const success = await authStore.loginWithFacebook(fbUserData);
+
+    if (success) {
+      router.push('/app');
+    }
+  } catch (error) {
+    console.error("Anulowano logowanie lub błąd:", error);
+  }
+};
 
 </script>
 

@@ -76,6 +76,33 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
+        async loginWithFacebook(fbUserData) {
+            this.isLoading = true;
+            try {
+                const payload = {
+                    facebookId: fbUserData.id,
+                    email: fbUserData.email,
+                    name: fbUserData.name,
+                    pictureUrl: fbUserData.picture?.data?.url || ''
+                };
+
+                const response = await axios.post('/auth/facebook', payload);
+                const token = response.data.accessToken;
+
+                this.token = token;
+                localStorage.setItem('token', token);
+                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+                await this.fetchUser();
+                return true;
+            } catch (error) {
+                console.error("Błąd backendu:", error);
+                return false;
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
         async fetchUser() {
             if (!this.token) return;
 
