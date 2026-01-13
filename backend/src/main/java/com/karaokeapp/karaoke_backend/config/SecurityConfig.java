@@ -1,7 +1,6 @@
 package com.karaokeapp.karaoke_backend.config;
 
 import com.karaokeapp.karaoke_backend.security.JwtAuthenticationFilter;
-import com.karaokeapp.karaoke_backend.security.OAuth2LoginSuccessHandler;
 import com.karaokeapp.karaoke_backend.services.CustomOAuth2UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +29,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomOAuth2UserService customOAuth2UserService;
-    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
@@ -66,16 +65,10 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-                .oauth2Login(oauth2 -> oauth2
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .userService(customOAuth2UserService)
-                        )
-                        .successHandler(oAuth2LoginSuccessHandler)
-
-                )
 
                 .authorizeHttpRequests(req -> req
                         .requestMatchers("/api/auth/**", "/oauth2/**", "/login/oauth2/**").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/facebook").permitAll()
                         .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/songs/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                         .requestMatchers("/api/categories/**").hasAuthority("ROLE_ADMIN")

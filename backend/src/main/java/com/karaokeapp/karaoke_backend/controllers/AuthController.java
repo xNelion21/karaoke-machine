@@ -28,11 +28,16 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<JwtAuthResponse> authenticateUser(@RequestBody LoginRequest loginRequest) {
 
-
             String token = authService.loginUser(loginRequest);
             return new ResponseEntity<>(new JwtAuthResponse(token), HttpStatus.OK);
 
 
     }
 
+    @PostMapping("/facebook")
+    public ResponseEntity<JwtAuthResponse> facebookLogin(@RequestBody com.karaokeapp.karaoke_backend.dto.FacebookLoginRequest facebookRequest) {
+        // Wywołujemy serwis, który sprawdzi usera w bazie lub go stworzy
+        String token = authService.loginOrRegisterViaFacebook(facebookRequest);
+        return new ResponseEntity<>(new JwtAuthResponse(token), HttpStatus.OK);
+    }
 }

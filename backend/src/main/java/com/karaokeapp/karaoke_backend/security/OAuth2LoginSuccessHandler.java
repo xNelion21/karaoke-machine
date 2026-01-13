@@ -1,5 +1,5 @@
 package com.karaokeapp.karaoke_backend.security;
-
+/*
 import com.karaokeapp.karaoke_backend.services.JwtService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,4 +38,4 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         response.sendRedirect(redirectUrl);
     }
-}
+} */

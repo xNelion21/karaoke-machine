@@ -19,15 +19,13 @@ import lombok.RequiredArgsConstructor;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder; // Zostanie dostarczony przez SecurityConfig
+    private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
 
     public void registerUser(RegisterRequest request) {
-        // 1. Walidacja unikalności
         if (userRepository.existsByUsername(request.getUsername())) {
-            // W profesjonalnym kodzie rzucasz tutaj wyjątek (np. UsernameAlreadyExistsException)
             throw new RuntimeException("Nazwa użytkownika jest już zajęta!");
         }
 
@@ -37,10 +35,8 @@ public class AuthService {
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
-
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.ROLE_USER);
-
         userRepository.save(user);
     }
 
@@ -56,6 +52,25 @@ public class AuthService {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         return jwtService.generateToken(userDetails);
 
+    }
+
+    public String loginOrRegisterViaFacebook(com.karaokeapp.karaoke_backend.dto.FacebookLoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseGet(() -> {
+                    User newUser = new User();
+                    newUser.setUsername(request.getName());
+                    newUser.setEmail(request.getEmail());
+                    newUser.setPassword(passwordEncoder.encode("FB_USER_" + java.util.UUID.randomUUID()));
+                    newUser.setRole(Role.ROLE_USER);
+                    newUser.setLocked(false);
+                    return userRepository.save(newUser);
+                });
+
+        if (user.isLocked()) {
+            throw new RuntimeException("Twoje konto jest zablokowane!");
+        }
+
+        return jwtService.generateToken(user);
     }
 
 
