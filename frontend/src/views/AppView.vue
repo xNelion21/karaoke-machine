@@ -174,8 +174,8 @@ function handleSongSelection(onlineSong) {
   border-radius: 1rem;
   padding: 1.5rem;
   height: 100%;
-  max-height: calc(100vh - 220px);
-  min-height: calc(100vh - 220px);
+  max-height: calc(100vh - 200px);
+  min-height: calc(100vh - 200px);
 
   display: flex;
   flex-direction: column;

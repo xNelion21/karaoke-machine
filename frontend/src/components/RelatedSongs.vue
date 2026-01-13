@@ -126,27 +126,23 @@ watch(() => props.currentSong, async (newSong) => {
 
 .related-songs-list {
   width: 100%;
-  height: 100%;        /* Zajmuje 100% wysokości rodzica (right-block) */
-  display: flex;       /* Flexbox */
-  flex-direction: column; /* Układ pionowy */
-  overflow: hidden;    /* Zapobiega rozpychaniu kontenera */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
-
-/* --- OBSZAR PRZEWIJANIA (tak jak w AppView .sidebar-content-scroll) --- */
 
 .related-scroll-area {
   width: 100%;
-  flex: 1;             /* Zajmuje całe dostępne miejsce poniżej nagłówka */
-  overflow-y: auto;    /* Włącza przewijanie */
-  min-height: 0;       /* Ważne dla Flexboxa */
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
   padding-right: 5px;
 
-  /* Ukrywanie paska (Firefox) */
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
-/* Ukrywanie paska (Chrome, Safari, Edge) */
 .related-scroll-area::-webkit-scrollbar {
   display: none;
   width: 0;
@@ -206,8 +202,13 @@ watch(() => props.currentSong, async (newSong) => {
 
 .overlay i { color: #fff; font-size: 1.2rem; }
 
-.related-song-item:hover .yt-thumb { transform: scale(1.1); }
-.related-song-item:hover .overlay { opacity: 1; }
+.related-song-item:hover .yt-thumb {
+  transform: scale(1.1);
+}
+
+.related-song-item:hover .overlay {
+  opacity: 1;
+}
 
 .song-info {
   display: flex;

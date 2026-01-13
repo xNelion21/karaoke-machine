@@ -40,9 +40,10 @@
   "player": {
     "no_video" : "No video found for this song.",
     "no_timestamp": "No time synchronization",
-    "no_text": "No text found for this song",
     "youtube_karaoke" : "Karaoke video",
     "youtube_text": "The lyrics should be displayed in the video",
+    "no_text": "No lyrics found for this song",
+    "diff_text": "Lyrics out of sync? Try a different version!",
     "select": "Select a song to start the karaoke!"
   }
 }
