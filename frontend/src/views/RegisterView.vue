@@ -70,7 +70,26 @@ const handleRegister = async () => {
 }
 
 const handleFacebookLogin = () => {
-  window.location.href = 'http://localhost:8080/oauth2/authorization/facebook';
+  if (!window.FB) {
+    console.error("Facebook SDK nie jest załadowane.");
+    return;
+  }
+
+  window.FB.login((response) => {
+    if (response.authResponse) {
+      window.FB.api('/me', { fields: 'id,name,email,picture' }, async (userData) => {
+        console.log('Dane z FB:', userData);
+
+        const success = await authStore.loginWithFacebook(userData);
+
+        if (success) {
+          router.push('/app');
+        }
+      });
+    } else {
+      console.log('Użytkownik anulował logowanie lub nie autoryzował aplikacji.');
+    }
+  }, { scope: 'public_profile,email' });
 }
 
 </script>
