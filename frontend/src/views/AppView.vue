@@ -110,7 +110,6 @@ async function handleSongSelected(song) {
 
 function handleSongSelection(onlineSong) {
   songsStore.currentSong = onlineSong;
-
 }
 
 </script>

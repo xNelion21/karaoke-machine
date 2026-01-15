@@ -15,18 +15,20 @@ export const useFavoritesStore = defineStore('favorites', () => {
     const isFavorite = computed(() => (songOrId) => {
         if (!songOrId) return false;
 
-        if (typeof songOrId === 'object') {
-            if (songOrId.id && favoriteIds.value.some(id => String(id) === String(songOrId.id))) {
+        const song = typeof songOrId === 'object' ? normalizeSong(songOrId) : null;
+
+        if (song?.id || (typeof songOrId !== 'object')) {
+            const idToCheck = song?.id || songOrId;
+            if (favoriteIds.value.some(id => String(id) === String(idToCheck))) {
                 return true;
             }
-            const vidId = songOrId.videoId || extractYoutubeId(songOrId.youtubeUrl);
-            if (vidId) {
-                return favoritesList.value.some(f => f.videoId === vidId);
-            }
-            return false;
         }
 
-        return favoriteIds.value.some(id => String(id) === String(songOrId));
+        if (song?.videoId) {
+            return favoritesList.value.some(f => f.videoId === song.videoId);
+        }
+
+        return false;
     })
 
     async function fetchFavorites() {
@@ -35,12 +37,28 @@ export const useFavoritesStore = defineStore('favorites', () => {
         try {
             const response = await axios.get('/songs/my-liked-songs');
             const rawData = response.data;
-
             favoritesList.value = rawData.map(song => normalizeSong(song));
-
         } catch (e) {
             console.error("Błąd pobierania ulubionych", e)
         }
+    }
+
+    async function saveSongToDb(rawSong) {
+        const song = normalizeSong(rawSong);
+        const ytId = song.videoId;
+
+        if (!ytId) throw new Error("Brak Video ID");
+
+        const youtubeDto = {
+            videoId: ytId,
+            title: song.title,
+            thumbnailUrl: song.thumbnailUrl,
+            artist: song.artist,
+            duration: song.duration
+        };
+
+        const response = await axios.post('/songs', youtubeDto);
+        return response.data;
     }
 
     async function toggleFavorite(rawSong) {
@@ -50,7 +68,14 @@ export const useFavoritesStore = defineStore('favorites', () => {
         }
         if (!rawSong) return;
 
-        const song = normalizeSong(rawSong);
+        let song = normalizeSong(rawSong);
+
+        if (!song.id && song.videoId) {
+            const existingFav = favoritesList.value.find(f => f.videoId === song.videoId);
+            if (existingFav && existingFav.id) {
+                song.id = existingFav.id;
+            }
+        }
 
         const dbId = song.id;
         const ytId = song.videoId;
@@ -66,19 +91,20 @@ export const useFavoritesStore = defineStore('favorites', () => {
             favoritesList.value.unshift(song);
             if (dbId) {
                 authStore.user.likedSongIds.push(dbId);
-            } else if (ytId) {
             }
         } else {
             if (dbId) {
                 const index = authStore.user.likedSongIds.findIndex(id => String(id) === String(dbId));
                 if (index > -1) authStore.user.likedSongIds.splice(index, 1);
             }
+
             favoritesList.value = favoritesList.value.filter(s => {
-                if (dbId && s.id) return String(s.id) !== String(dbId);
-                if (ytId && s.videoId) return s.videoId !== ytId;
+                if (dbId && s.id && String(s.id) === String(dbId)) return false;
+                if (ytId && s.videoId && s.videoId === ytId) return false;
                 return true;
             });
         }
+
         try {
             if (isAdding) {
                 if (!dbId && ytId) {
@@ -94,13 +120,12 @@ export const useFavoritesStore = defineStore('favorites', () => {
                     if (response.data?.id) {
                         const newId = response.data.id;
 
-                        song.id = newId;
-                        authStore.user.likedSongIds.push(newId);
-
                         const idx = favoritesList.value.findIndex(f => f.videoId === ytId);
                         if (idx !== -1) {
                             favoritesList.value[idx].id = newId;
                         }
+
+                        authStore.user.likedSongIds.push(newId);
                     }
                 }
                 else if (dbId) {
@@ -109,6 +134,8 @@ export const useFavoritesStore = defineStore('favorites', () => {
             } else {
                 if (dbId) {
                     await axios.delete(`/users/me/likes/${dbId}`);
+                } else {
+                    console.warn("Próba usunięcia piosenki bez ID (błąd synchronizacji stanu).");
                 }
             }
         } catch (error) {
@@ -120,7 +147,7 @@ export const useFavoritesStore = defineStore('favorites', () => {
                     if (idx > -1) authStore.user.likedSongIds.splice(idx, 1);
                 }
             } else {
-                favoritesList.value.push(song);
+                favoritesList.value.unshift(song)
                 if (dbId) authStore.user.likedSongIds.push(dbId);
             }
             alert("Wystąpił błąd podczas aktualizacji ulubionych.");

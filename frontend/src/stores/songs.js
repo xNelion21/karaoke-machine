@@ -53,16 +53,20 @@ export const useSongsStore = defineStore('songs', {
             }
         },
 
-        async fetchSongDetails(song) {
-            if (song.id) {
-                try {
-                    const response = await axios.get(`/songs/${song.id}`);
-                    this.currentSong = normalizeSong(response.data);
-                } catch (e) {
-                    console.error("Błąd pobierania szczegółów:", e);
-                }
-            } else {
-                this.currentSong = song;
+        async fetchSongDetails(songOrId) {
+            const songId = typeof songOrId === 'object' ? (songOrId.id || songOrId.song?.id) : songOrId;
+
+            if (typeof songOrId === 'object') {
+                this.currentSong = { ...songOrId };
+            }
+
+            try {
+                const response = await axios.get(`/songs/${songId}`);
+
+                this.currentSong = response.data;
+
+            } catch (error) {
+                console.error("Błąd pobierania szczegółów:", error);
             }
         },
 
