@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.Getter;
 
-import java.util.List;
 import java.util.Set;
 
 @Data
