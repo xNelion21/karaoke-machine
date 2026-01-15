@@ -32,6 +32,5 @@ public class SongRequestDTO {
     }
 
     private String youtubeUrl;
-    private List<LyricLineDTO> lyricLines;
 
 }
