@@ -212,7 +212,7 @@ async function confirmRoleChange() {
 
   try {
     axios.defaults.headers.common['Authorization'] = `Bearer ${auth.token}`
-    await axios.put(`/admin/users/${user.id}/role`, { role: newRole })
+    await axios.patch(`/admin/users/${user.id}/role`, { role: newRole })
     user.role = newRole
   } catch (e) {}
 

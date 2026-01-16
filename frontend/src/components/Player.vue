@@ -11,6 +11,18 @@
       >
         <i :class="isFav ? 'bi bi-heart-fill' : 'bi bi-heart'"></i>
       </button>
+      <button
+          class="btn-suggest-icon ms-2"
+          @click="showSuggestModal = true"
+          aria-label="Zgłoś zmianę"
+          title="Zgłoś zmianę"
+      >
+        <i class="bi bi-pencil-square"></i>
+      </button>
+
+
+
+
 
       <div class="meta-tags mb-2">
         <span v-if="displayArtist" class="fw-bold tag artist">
@@ -85,6 +97,13 @@
     <i class="bi bi-disc spin-animation"></i>
     <p>{{ $t('player.select') }}</p>
   </div>
+  <SuggestChange
+      v-if="showSuggestModal"
+      :song-id="currentSongId"
+      @close="showSuggestModal = false"
+      @submitted="showSuggestModal = false"
+  />
+
 </template>
 
 <script setup>
@@ -93,6 +112,8 @@ import { useFavoritesStore } from '@/stores/favorites';
 import { fetchSyncedLyrics } from '@/services/lyricsService';
 import { parseLRC } from '@/utils/lrcParser';
 import { normalizeSong, extractYoutubeId } from '@/utils/songUtils';
+import SuggestChange from '@/components/SuggestChange.vue'
+
 
 const emit = defineEmits(['favorite-toggled']);
 
@@ -117,6 +138,9 @@ const isLyricsLoading = ref(true);
 
 const availableVersions = ref([]);
 const currentVersionIndex = ref(0);
+
+const showSuggestModal = ref(false)
+
 
 const currentSongId = computed(() => props.songDetails?.id || props.songDetails?.song?.id);
 
@@ -424,6 +448,7 @@ onUnmounted(() => {
   justify-content: center;
   gap: 15px;
   flex-wrap: wrap;
+  margin-top: 6px;
 }
 
 .tag {
@@ -649,6 +674,28 @@ onUnmounted(() => {
 .btn-favorite.is-favorite i {
   filter: drop-shadow(0 0 5px rgba(255, 101, 132, 0.7));
 }
+.btn-suggest-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  font-size: 1.8rem;
+  padding: 0;
+  color: #aab2c2;
+
+  transition: color 0.3s, transform 0.2s;
+}
+
+.btn-suggest-icon:hover {
+  color: #8a7aff;
+  transform: scale(1.1);
+}
+
+.btn-suggest-icon:active {
+  transform: scale(0.95);
+}
+
+
 
 .version-control-wrapper {
   position: absolute;
