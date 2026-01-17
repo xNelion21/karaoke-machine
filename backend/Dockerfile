@@ -10,6 +10,8 @@ COPY build.gradle .
 COPY gradle ./gradle
 
 
+RUN chmod +x gradlew
+
 COPY src ./src
 
 RUN ./gradlew bootJar --no-daemon
