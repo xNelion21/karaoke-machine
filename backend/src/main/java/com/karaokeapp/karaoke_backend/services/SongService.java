@@ -140,6 +140,7 @@ public class SongService {
         suggestion.setSong(song);
         suggestion.setUser(user);
         suggestion.setProposedLyrics(dto.getProposedLyrics());
+        suggestion.setProposedContent(dto.getProposedContent());
         suggestion.setProposedGenre(dto.getProposedGenre());
         suggestion.setProposedAuthorIds(dto.getProposedAuthorIds());
         suggestion.setProposedCategoryIds(dto.getProposedCategoryIds());

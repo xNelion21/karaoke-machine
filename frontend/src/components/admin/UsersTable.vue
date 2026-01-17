@@ -212,12 +212,21 @@ async function confirmRoleChange() {
 
   try {
     axios.defaults.headers.common['Authorization'] = `Bearer ${auth.token}`
-    await axios.put(`/admin/users/${user.id}/role`, { role: newRole })
+
+    await axios.patch(
+        `/admin/users/${user.id}/role`,
+        null,
+        { params: { role: newRole } }
+    )
+
     user.role = newRole
-  } catch (e) {}
+  } catch (e) {
+    error.value = 'Nie udało się zmienić roli użytkownika'
+  }
 
   closeRoleModal()
 }
+
 
 onMounted(loadUsers)
 </script>
