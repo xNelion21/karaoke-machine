@@ -153,8 +153,8 @@ const currentVideoId = computed(() => {
 
 const isFav = computed(() => {
   if (currentSongId.value && favoritesStore.isFavorite(currentSongId.value)) return true;
-  if (currentVideoId.value && favoritesStore.favoriteList) {
-    return favoritesStore.favoriteList.some(s => s.videoId === currentVideoId.value);
+  if (currentVideoId.value && favoritesStore.favoritesList) {
+    return favoritesStore.favoritesList.some(s => s.videoId === currentVideoId.value);
   }
   return false;
 });
@@ -171,22 +171,31 @@ const uniqueSongKey = computed(() => {
   return currentVideoId.value;
 });
 
+const videoId = computed(() => currentVideoId.value);
+
 const displayArtist = computed(() => normalizedDetails.value?.artist || '');
 const displayTitle = computed(() => normalizedDetails.value?.title || '');
 
-const sortedLyricLines = computed(() => {
-  let lines = props.songDetails?.lyricLines || props.songDetails?.song?.lyricLines;
+const parsedLocalLyrics = computed(() => {
+  const rawLrc = props.songDetails?.lyrics || props.songDetails?.song?.lyrics;
 
-  if (!lines || lines.length === 0) {
-    lines = fetchedLyricLines.value;
+  if (rawLrc && typeof rawLrc === 'string' && rawLrc.includes('[')) {
+    return mapParsedToPlayerFormat(parseLRC(rawLrc));
   }
-
-  return (lines && lines.length > 0)
-      ? [...lines].sort((a, b) => a.timeStampStart - b.timeStampStart)
-      : [];
+  return [];
 });
 
-const videoId = computed(() => currentVideoId.value);
+const sortedLyricLines = computed(() => {
+
+  if (parsedLocalLyrics.value.length > 0) {
+    return parsedLocalLyrics.value;
+  }
+
+  if (fetchedLyricLines.value.length > 0) {
+    return fetchedLyricLines.value;
+  }
+  return [];
+});
 
 const activeLineIndex = computed(() => {
   if (!sortedLyricLines.value.length) return -1;
@@ -215,15 +224,7 @@ const loadLyrics = async (durationOverride = null) => {
 
   const targetKey = uniqueSongKey.value;
 
-  const existingLines = song.lyricLines || song.song?.lyricLines;
-  if (existingLines?.length > 0) {
-    isLyricsLoading.value = false;
-    return;
-  }
-
-  const rawLrc = song.lyrics || song.song?.lyrics;
-  if (rawLrc?.includes('[')) {
-    fetchedLyricLines.value = mapParsedToPlayerFormat(parseLRC(rawLrc));
+  if (parsedLocalLyrics.value.length > 0) {
     isLyricsLoading.value = false;
     return;
   }
@@ -244,7 +245,6 @@ const loadLyrics = async (durationOverride = null) => {
     let results = await fetchSyncedLyrics(artist, title, searchDuration);
 
     if (uniqueSongKey.value !== targetKey) {
-      console.log(`[LoadLyrics] Odrzucono wyniki - zmiana piosenki (Target: ${targetKey}, Current: ${uniqueSongKey.value})`);
       return;
     }
 
@@ -377,8 +377,6 @@ watch(videoId, async (newId) => {
 
 watch(uniqueSongKey, async (newKey, oldKey) => {
   if (newKey !== oldKey) {
-    console.log(`[Watcher] Zmiana utworu (Key): ${oldKey} -> ${newKey}`);
-
     isLyricsLoading.value = true;
     fetchedLyricLines.value = [];
     availableVersions.value = [];
@@ -390,18 +388,6 @@ watch(uniqueSongKey, async (newKey, oldKey) => {
     }
   }
 
-  if (newKey) {
-    const details = props.songDetails;
-    const hasLocalLyrics = details?.lyrics || details?.song?.lyrics || (details?.lyricLines && details.lyricLines.length > 0);
-    const hasKnownDuration = details?.duration || details?.song?.duration;
-
-    if (hasLocalLyrics || hasKnownDuration) {
-      await loadLyrics();
-    } else {
-      console.log('[Watcher] Brak czasu trwania/tekstu lokalnego. Czekam na YouTube...');
-      isLyricsLoading.value = true;
-    }
-  }
 }, { immediate: true });
 
 onUnmounted(() => {

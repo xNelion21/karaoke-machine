@@ -29,9 +29,8 @@
                 <span class="dropdown-item-text fw-bold text-primary text-truncate">{{ authStore.username }}</span>
               </li>
 
-              <li><hr class="dropdown-divider"></li>
-
               <li v-if="authStore.user?.role === 'ROLE_ADMIN'">
+                <hr class="dropdown-divider">
                 <router-link to="/admin" class="dropdown-item fw-bold">
                   <i class="bi bi-gear me-2"></i> Panel administratora
                 </router-link>
@@ -113,6 +112,7 @@ onUnmounted(() => {
 
 <style scoped>
 .navbar {
+  font-family: 'Arial', sans-serif;
   background: rgba(24, 24, 24);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);

@@ -19,6 +19,10 @@ export const fetchSyncedLyrics = async (artist, title, duration = null) => {
 
         const candidates = results.filter(item => item.syncedLyrics);
 
+        if (candidates.length === 0) {
+            return null;
+        }
+
         if (targetDuration) {
             candidates.forEach(c => {
                 c.diff = Math.abs(c.duration - targetDuration);

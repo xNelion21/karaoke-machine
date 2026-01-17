@@ -9,11 +9,14 @@ export function parseLRC(lrcString) {
     lines.forEach(line => {
         const match = timeReg.exec(line);
         if (match) {
-            const min = parseInt(match[1]);
-            const sec = parseInt(match[2]);
-            const ms = parseInt(match[3]);
+            const min = parseInt(match[1], 10);
+            const sec = parseInt(match[2], 10);
+            const msRaw = match[3];
 
-            const time = min * 60 + sec + (ms / 100);
+            const ms = parseInt(msRaw, 10);
+            const msInSeconds = msRaw.length === 3 ? ms / 1000 : ms / 100;
+
+            const time = min * 60 + sec + msInSeconds;
             const text = line.replace(timeReg, '').trim();
 
             if (text) {

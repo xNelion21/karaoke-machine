@@ -1,19 +1,15 @@
 package com.karaokeapp.karaoke_backend.services; // Lub .mappers
 
-import com.karaokeapp.karaoke_backend.dto.LyricLineDTO;
 import com.karaokeapp.karaoke_backend.dto.SongDetailsDTO;
 import com.karaokeapp.karaoke_backend.dto.SongRequestDTO;
 import com.karaokeapp.karaoke_backend.dto.SongResponseDTO;
 import com.karaokeapp.karaoke_backend.models.Author;
-import com.karaokeapp.karaoke_backend.models.LyricLine;
 import com.karaokeapp.karaoke_backend.models.Song; // Encja Song (założenie, że Marcin ją stworzył)
 import com.karaokeapp.karaoke_backend.models.Category;
 import com.karaokeapp.karaoke_backend.repositories.AuthorRepository;
 import com.karaokeapp.karaoke_backend.repositories.CategoryRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,12 +18,10 @@ public class SongMapperService {
 
     private final AuthorRepository authorRepository;
     private final CategoryRepository categoryRepository;
-    private final LyricLineMapperService lyricLineMapperService;
 
-    public SongMapperService(AuthorRepository authorRepository, CategoryRepository categoryRepository, LyricLineMapperService lyricLineMapperService) {
+    public SongMapperService(AuthorRepository authorRepository, CategoryRepository categoryRepository) {
         this.authorRepository = authorRepository;
         this.categoryRepository = categoryRepository;
-        this.lyricLineMapperService = lyricLineMapperService;
     }
 
     public Song toEntity(SongRequestDTO dto) {
@@ -60,16 +54,6 @@ public class SongMapperService {
         song.setGenre(dto.getGenre());
         song.setLyrics(dto.getLyrics());
         song.setYoutubeUrl(dto.getYoutubeUrl());
-
-        if (dto.getLyricLines() != null){
-            List<LyricLine> lyricLines = dto.getLyricLines().stream()
-                    .map(lyricLineMapperService::toEntity)
-                    .toList();
-
-            lyricLines.forEach(lyricLine -> lyricLine.setSong(song));
-
-            song.setLyricLines(lyricLines);
-        }
 
         return song;
     }
@@ -134,15 +118,6 @@ public class SongMapperService {
         if (dto.getLyrics() != null) {
             song.setLyrics(dto.getLyrics());
         }
-        if (dto.getLyricLines() != null){
-            song.getLyricLines().clear();
-
-            for (LyricLineDTO lyricLineDTO : dto.getLyricLines()) {
-                LyricLine lyricLine = lyricLineMapperService.toEntity(lyricLineDTO);
-                lyricLine.setSong(song);
-                song.getLyricLines().add(lyricLine);
-            }
-        }
         if (dto.getYoutubeUrl() != null){
             song.setYoutubeUrl(dto.getYoutubeUrl());
         }
@@ -175,14 +150,7 @@ public class SongMapperService {
         }
 
         dto.setGenre(song.getGenre());
-
-        dto.setLyricLines(
-                song.getLyricLines().stream()
-                        .sorted(Comparator.comparing(LyricLine::getTimeStampStart))
-                        .map(lyricLineMapperService::toDTO)
-                        .toList()
-        );
-
+        dto.setLyrics(song.getLyrics());
         dto.setYoutubeUrl(song.getYoutubeUrl());
 
         return dto;
