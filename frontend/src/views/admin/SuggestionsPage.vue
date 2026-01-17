@@ -47,8 +47,8 @@ const page = ref(1)
   position: relative;
   color: white;
   padding: 20px;
-  font-family: 'Inter', sans-serif;
 }
+
 
 .admin-title {
   font-size: 2rem;
