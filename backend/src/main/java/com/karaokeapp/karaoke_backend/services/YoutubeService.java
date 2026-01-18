@@ -66,6 +66,8 @@ public class YoutubeService {
             }
             return songs;
         } catch (Exception e) {
+            System.out.println("BŁĄD PODCZAS SZUKANIA W YOUTUBE: " + e.getMessage());
+            e.printStackTrace();
             return new ArrayList<>();
         }
     }
