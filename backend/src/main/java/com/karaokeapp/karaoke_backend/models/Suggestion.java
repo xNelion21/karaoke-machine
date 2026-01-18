@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-import java.util.Set;
 
 @Entity
 @Data
@@ -39,9 +38,5 @@ public class Suggestion {
     @Lob
     private String proposedLyrics;
     private String proposedGenre;
-
-    @ElementCollection
-    private Set<Long> proposedAuthorIds;
-
 
 }

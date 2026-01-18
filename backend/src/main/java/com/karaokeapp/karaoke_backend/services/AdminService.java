@@ -7,9 +7,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -18,8 +16,6 @@ public class AdminService {
 
     private final SuggestionRepository suggestionRepository;
     private final SongRepository songRepository;
-    private final AuthorRepository authorRepository;
-    private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
 
 
@@ -41,13 +37,13 @@ public class AdminService {
                 .username(s.getUser().getUsername())
                 .proposedLyrics(s.getProposedLyrics())
                 .proposedGenre(s.getProposedGenre())
-                .proposedAuthorIds(s.getProposedAuthorIds())
                 .proposedContent(s.getProposedContent())
                 .status(s.getStatus())
                 .createdAt(s.getCreatedAt())
                 .build();
     }
 
+    @Transactional
     public void processSuggestion(Long suggestionId, SuggestionStatus newStatus) {
         Suggestion suggestion = suggestionRepository.findById(suggestionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Propozycja o ID " + suggestionId + " nie istnieje."));
@@ -64,10 +60,7 @@ public class AdminService {
             if (suggestion.getProposedGenre() != null) {
                 song.setGenre(suggestion.getProposedGenre());
             }
-            if (suggestion.getProposedAuthorIds() != null && !suggestion.getProposedAuthorIds().isEmpty()) {
-                Set<Author> newAuthors = new HashSet<>(authorRepository.findAllById(suggestion.getProposedAuthorIds()));
-                song.setAuthors(newAuthors);
-            }
+
             songRepository.save(song);
 
         }

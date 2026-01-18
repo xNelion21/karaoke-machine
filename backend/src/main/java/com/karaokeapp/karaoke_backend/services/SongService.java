@@ -142,7 +142,6 @@ public class SongService {
         suggestion.setProposedLyrics(dto.getProposedLyrics());
         suggestion.setProposedContent(dto.getProposedContent());
         suggestion.setProposedGenre(dto.getProposedGenre());
-        suggestion.setProposedAuthorIds(dto.getProposedAuthorIds());
         suggestion.setStatus(SuggestionStatus.PENDING);
 
         suggestionRepository.save(suggestion);

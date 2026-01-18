@@ -7,8 +7,6 @@
         <option value="GENERAL">Ogólna</option>
         <option value="TEXT">Tekst piosenki</option>
         <option value="TIMESTAMP">Znaczniki czasowe</option>
-        <option value="TITLE">Tytuł</option>
-        <option value="AUTHOR">Autor</option>
       </select>
 
       <textarea

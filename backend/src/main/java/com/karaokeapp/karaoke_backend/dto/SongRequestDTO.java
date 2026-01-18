@@ -16,20 +16,9 @@ public class SongRequestDTO {
     @Size(max = 100, message = "Tytuł piosenki jest za długi")
     private String title;
 
-    @NotEmpty(message = "Przynajmniej jeden autor musi być podany")
-    private Set<@NotNull(message = "Id autora nie może być null") Long> authorsIds;
-
     @Size(max = 50, message = "Gatunek jest za długi")
     private String genre;
     private String lyrics;
-
-    @Getter
-    private Set<Long> categoryIds;
-
-    public Set<Long> getAuthorIds() {
-        return authorsIds;
-    }
-
     private String youtubeUrl;
 
 }
