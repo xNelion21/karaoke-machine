@@ -68,11 +68,14 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(req -> req
                         .requestMatchers("/api/auth/**", "/oauth2/**", "/login/oauth2/**").permitAll()
+                        .requestMatchers("/api/users/me").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                        .requestMatchers("/api/songs/my-liked-songs").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/songs/suggest").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/songs/like").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/songs/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/songs/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/songs/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/songs/**").hasAuthority("ROLE_ADMIN")
-
                         .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/categories/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/authors/**").hasAuthority("ROLE_ADMIN")
