@@ -27,15 +27,12 @@ public class Suggestion {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // Proponowany nowy tekst/wiersz (główna zmiana)
     @Lob
     private String proposedContent;
 
-    // Status propozycji
     @Enumerated(EnumType.STRING)
     private SuggestionStatus status = SuggestionStatus.PENDING;
 
-    // Data zgłoszenia, opcjonalnie data akceptacji/odrzucenia
     private java.time.LocalDateTime createdAt = java.time.LocalDateTime.now();
 
 
@@ -45,7 +42,6 @@ public class Suggestion {
 
     @ElementCollection
     private Set<Long> proposedAuthorIds;
-    @ElementCollection
-    private Set<Long> proposedCategoryIds;
+
 
 }

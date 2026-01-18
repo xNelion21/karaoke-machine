@@ -42,7 +42,6 @@ public class AdminService {
                 .proposedLyrics(s.getProposedLyrics())
                 .proposedGenre(s.getProposedGenre())
                 .proposedAuthorIds(s.getProposedAuthorIds())
-                .proposedCategoryIds(s.getProposedCategoryIds())
                 .proposedContent(s.getProposedContent())
                 .status(s.getStatus())
                 .createdAt(s.getCreatedAt())
@@ -68,10 +67,6 @@ public class AdminService {
             if (suggestion.getProposedAuthorIds() != null && !suggestion.getProposedAuthorIds().isEmpty()) {
                 Set<Author> newAuthors = new HashSet<>(authorRepository.findAllById(suggestion.getProposedAuthorIds()));
                 song.setAuthors(newAuthors);
-            }
-            if (suggestion.getProposedCategoryIds() != null && !suggestion.getProposedCategoryIds().isEmpty()) {
-                Set<Category> newCategories = new HashSet<>(categoryRepository.findAllById(suggestion.getProposedCategoryIds()));
-                song.setCategories(newCategories);
             }
             songRepository.save(song);
 
