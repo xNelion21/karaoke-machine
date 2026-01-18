@@ -173,6 +173,20 @@ public class SongService {
         newSong.setTitle(dto.getTitle());
         newSong.setYoutubeUrl(fullYoutubeUrl);
         newSong.setThumbnailUrl(dto.getThumbnailUrl());
+        newSong.setGenre("General");
+
+        Category defaultCategory = categoryRepository.findById(3L)
+                .orElseGet(() -> {
+                    return categoryRepository.findAll().stream().findFirst().orElse(null);
+                });
+
+        if (defaultCategory != null) {
+            if (newSong.getCategories() == null) {
+                newSong.setCategories(new HashSet<>());
+            }
+            newSong.getCategories().add(defaultCategory);
+        }
+
 
         if (dto.getArtist() != null && !dto.getArtist().trim().isEmpty()) {
             String artistName = dto.getArtist().trim();
