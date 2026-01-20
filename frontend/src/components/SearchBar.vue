@@ -107,7 +107,9 @@ onBeforeUnmount(() => {
   max-width: 600px;
   position: relative;
   z-index: 10;
-  margin-top: 20px;
+  margin-top: 5px;
+  justify-content: center;
+  align-items: center;
 }
 
 .form-control {

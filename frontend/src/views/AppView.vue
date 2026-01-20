@@ -2,7 +2,7 @@
   <div class="app-page">
     <Navbar />
 
-    <div class="search-auth-row mb-3 ">
+    <div class="search-auth-row mb-2 ">
       <div class="search-wrapper">
         <SearchBar @song-selected="handleSongSelected" />
       </div>
@@ -131,18 +131,23 @@ async function handleSongSelected(song) {
 }
 
 .search-auth-row {
+  margin: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
   position: relative;
+  padding: 5px 0;
 }
 
 .search-wrapper {
   position: relative;
-  width: 40%;
-  max-width: 650px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 600px;
   z-index: 1000;
+  margin: 0 auto;
 }
 
 .app-main {
