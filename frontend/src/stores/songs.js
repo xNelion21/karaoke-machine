@@ -57,14 +57,17 @@ export const useSongsStore = defineStore('songs', {
             const songId = typeof songOrId === 'object' ? (songOrId.id || songOrId.song?.id) : songOrId;
 
             if (typeof songOrId === 'object') {
-                this.currentSong = { ...songOrId };
+                this.currentSong = {
+                    ...songOrId,
+                    videoId: songOrId.videoId || songOrId.song?.videoId,
+                };
             }
+
+            if (!songId) return;
 
             try {
                 const response = await axios.get(`/songs/${songId}`);
-
                 this.currentSong = response.data;
-
             } catch (error) {
                 console.error("Błąd pobierania szczegółów:", error);
             }
@@ -115,16 +118,42 @@ export const useSongsStore = defineStore('songs', {
             this.searchResults = [];
         },
 
-        async fetchRelatedSongs(artistName) {
+        fetchRelatedSongs(category, currentSongId) {
+            this.relatedSongs = [];
             this.isRelatedLoading = true;
-            try {
-                const response = await axios.get('/songs/search-online', { params: { query: artistName } });
-                this.relatedSongs = Array.isArray(response.data) ? response.data : [];
-            } catch (e) {
-                console.error(e);
-            } finally {
-                this.isRelatedLoading = false;
-            }
+
+            setTimeout(() => {
+                try {
+                    const numericCurrentId = Number(currentSongId);
+                    let results = this.allSongs.filter(song => {
+                        const sId = Number(song.id || song.song?.id);
+                        if (sId === numericCurrentId) return false;
+
+                        const songCategories = song.categories || song.song?.categories || [];
+
+                        return songCategories.some(cat =>
+                            String(cat).toLowerCase() === String(category).toLowerCase()
+                        );
+                    });
+
+
+                    if (results.length === 0) {
+                        results = this.allSongs.filter(song => {
+                            const sId = Number(song.id || song.song?.id);
+                            return sId !== numericCurrentId;
+                        });
+                    }
+
+                    this.relatedSongs = results
+                        .sort(() => Math.random() - 0.5)
+                        .slice(0, 6);
+
+                } catch (error) {
+                    console.error("Błąd filtrowania:", error);
+                } finally {
+                    this.isRelatedLoading = false;
+                }
+            }, 300);
         },
 
         resetState() {
@@ -135,4 +164,4 @@ export const useSongsStore = defineStore('songs', {
             this.searchQuery = '';
         },
     }
-});
+})
