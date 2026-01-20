@@ -2,7 +2,7 @@
   <div class="app-page">
     <Navbar />
 
-    <div class="search-auth-row mb-5">
+    <div class="search-auth-row mb-3 ">
       <div class="search-wrapper">
         <SearchBar @song-selected="handleSongSelected" />
       </div>
@@ -61,7 +61,7 @@
         <aside class="col-lg-3 col-md-12 right-block order-3">
           <RelatedSongs
               :current-song="songsStore.currentSong"
-              @select-song="handleSongSelection"
+              @select-song="handleSongSelected"
           />
         </aside>
 
@@ -82,7 +82,6 @@ import Navbar from '@/components/Navbar.vue'
 import SearchBar from '@/components/SearchBar.vue'
 import Player from '@/components/Player.vue'
 import RelatedSongs from '@/components/RelatedSongs.vue'
-import {normalizeSong} from "@/utils/songUtils.js";
 
 const songsStore = useSongsStore()
 const favoriteStore = useFavoritesStore()
@@ -108,8 +107,8 @@ async function handleSongSelected(song) {
 
 }
 
-function handleSongSelection(onlineSong) {
-  songsStore.currentSong = onlineSong;
+function handleSongSelection(song) {
+  songsStore.currentSong = song;
 }
 
 </script>
@@ -144,12 +143,9 @@ function handleSongSelection(onlineSong) {
 }
 
 .search-wrapper {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
   width: 40%;
   max-width: 650px;
-  margin-top: 45px;
   z-index: 1000;
 }
 
@@ -157,7 +153,7 @@ function handleSongSelection(onlineSong) {
   flex: 1;
   width: 100%;
   padding: 0;
-  margin-top: 25px;
+
 }
 
 .app-main .row {
@@ -290,6 +286,15 @@ function handleSongSelection(onlineSong) {
   text-overflow: ellipsis;
 }
 
+
+.sidebar-list {
+  position: relative;
+  padding: 0;
+  list-style: none;
+  z-index: 10;
+  overflow: visible;
+}
+
 .list-enter-active,
 .list-leave-active {
   transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
@@ -308,7 +313,10 @@ function handleSongSelection(onlineSong) {
 .list-leave-active {
   position: absolute;
   width: 100%;
+  left: 0;
+  top: auto;
   z-index: 0;
+  pointer-events: none;
 }
 
 @media (min-width: 992px) {

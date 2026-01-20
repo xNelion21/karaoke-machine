@@ -33,16 +33,28 @@
     "favorites": "Ulubione",
     "no_results": "Brak wyników",
     "no_favorites": "Brak ulubionych piosenek",
-    "no_related": "Nie znaleziono utworów z gatunku",
-    "related": "Powiązane utwory",
+    "no_related": "Nie znaleziono utworów z gatunku: ",
+    "related": "Posłuchaj również",
     "loading": "Ładowanie...",
-    "select_song": "Wybierz piosenkę, aby zobaczyć powiązane utwory."
+    "select_song": "Wybierz piosenkę, aby zobaczyć powiązane utwory.",
+    "suggest_change": "Zaproponuj poprawkę",
+    "send": "Wyślij",
+    "cancel": "Anuluj"
+  },
+  "change": {
+    "suggest_change": "Zaproponuj poprawkę",
+    "general": "Ogólne",
+    "text": "Tekst piosenki",
+    "other": "Inne",
+    "send": "Wyślij",
+    "cancel": "Anuluj",
+    "suggestion": "Opisz proponowaną poprawkę"
   },
   "player": {
-    "no_video" : "Brak wideo dla tego utworu.",
+    "no_video": "Brak wideo dla tego utworu.",
     "no_timestamp": "Brak synchronizacji czasowej.",
     "no_text": "Brak tekstu dla tego utworu.",
-    "youtube_karaoke" : "Wideo Karaoke",
+    "youtube_karaoke": "Wideo Karaoke",
     "youtube_text": "Tekst utworu powinien być widoczny na filmie",
     "diff_text": "Zły tekst? Wypróbuj inną wersję!",
     "select": "Wybierz piosenkę, aby rozpocząć karaoke!"

@@ -1,5 +1,6 @@
 <template>
   <div v-if="songDetails" class="karaoke-player-container">
+
     <div class="header-info">
       <h3>{{ displayTitle }}</h3>
 
@@ -11,18 +12,6 @@
       >
         <i :class="isFav ? 'bi bi-heart-fill' : 'bi bi-heart'"></i>
       </button>
-      <button
-          class="btn-suggest-icon ms-2"
-          @click="showSuggestModal = true"
-          aria-label="Zgłoś zmianę"
-          title="Zgłoś zmianę"
-      >
-        <i class="bi bi-pencil-square"></i>
-      </button>
-
-
-
-
 
       <div class="meta-tags mb-2">
         <span v-if="displayArtist" class="fw-bold tag artist">
@@ -45,22 +34,30 @@
       <div ref="youtubeTarget" class="youtube-target"></div>
     </div>
 
+    <div class="controls-bar">
 
-    <div class="lyrics-display">
+      <button class="btn-control" @click="showSuggestModal = true">
+        <i class="bi bi-pencil-square me-2"></i>
+        <span>{{ $t('change.suggest_change') }}</span>
+      </button>
 
-      <div v-if="availableVersions.length > 1" class="version-control-wrapper">
-        <button @click="tryNextVersion" class="btn-version">
-        <span class="version-counter">
+      <button
+          v-if="availableVersions.length > 1 && sortedLyricLines.length > 0"
+          @click="tryNextVersion"
+          class="btn-control version-btn"
+      >
+        <span class="version-counter me-2">
           {{ currentVersionIndex + 1 }} / {{ availableVersions.length }}
         </span>
-          <span class="version-label">{{ $t ('player.diff_text')}}</span>
-          <i class="bi bi-arrow-repeat icon-refresh"></i>
-        </button>
-      </div>
+        <span>{{ $t('player.diff_text') }}</span>
+        <i class="bi bi-arrow-repeat ms-2 icon-refresh"></i>
+      </button>
+    </div>
 
+    <div class="lyrics-display">
       <div v-if="isLyricsLoading && sortedLyricLines.length === 0" class="fallback-lyrics loading">
         <i class="bi bi-arrow-repeat spin-animation"></i>
-        <p class="mt-3">{{  $t('app.loading') }}</p>
+        <p>{{  $t('app.loading') }}</p>
       </div>
 
       <div v-if="sortedLyricLines && sortedLyricLines.length > 0" class="teleprompter-container" ref="teleprompterRef">
@@ -97,13 +94,14 @@
     <i class="bi bi-disc spin-animation"></i>
     <p>{{ $t('player.select') }}</p>
   </div>
+
   <SuggestChange
       v-if="showSuggestModal"
       :song-id="currentSongId"
+      :initial-lyrics="currentRawLyrics"
       @close="showSuggestModal = false"
       @submitted="showSuggestModal = false"
   />
-
 </template>
 
 <script setup>
@@ -113,7 +111,6 @@ import { fetchSyncedLyrics } from '@/services/lyricsService';
 import { parseLRC } from '@/utils/lrcParser';
 import { normalizeSong, extractYoutubeId } from '@/utils/songUtils';
 import SuggestChange from '@/components/SuggestChange.vue'
-
 
 const emit = defineEmits(['favorite-toggled']);
 
@@ -140,7 +137,6 @@ const availableVersions = ref([]);
 const currentVersionIndex = ref(0);
 
 const showSuggestModal = ref(false)
-
 
 const currentSongId = computed(() => props.songDetails?.id || props.songDetails?.song?.id);
 
@@ -175,6 +171,20 @@ const videoId = computed(() => currentVideoId.value);
 
 const displayArtist = computed(() => normalizedDetails.value?.artist || '');
 const displayTitle = computed(() => normalizedDetails.value?.title || '');
+
+
+const currentRawLyrics = computed(() => {
+  if (parsedLocalLyrics.value.length > 0) {
+    return props.songDetails?.lyrics || props.songDetails?.song?.lyrics || '';
+  }
+
+  if (availableVersions.value.length > 0 && availableVersions.value[currentVersionIndex.value]) {
+    const selected = availableVersions.value[currentVersionIndex.value];
+    return selected.syncedLyrics || selected.lyrics || '';
+  }
+
+  return '';
+});
 
 const parsedLocalLyrics = computed(() => {
   const rawLrc = props.songDetails?.lyrics || props.songDetails?.song?.lyrics;
@@ -301,7 +311,6 @@ function mapParsedToPlayerFormat(parsedLines) {
   }));
 }
 
-
 const scrollToActiveLine = (behavior = 'smooth') => {
   if (activeLineRef.value && teleprompterRef.value) {
     activeLineRef.value.scrollIntoView({ behavior, block: 'center' });
@@ -371,8 +380,19 @@ const seekTo = (time) => player.value?.seekTo(time, true);
 
 
 watch(videoId, async (newId) => {
-  if (newId) { await nextTick(); initPlayer(); }
+  if (newId) {
+    await nextTick();
+    initPlayer();
+
+    setTimeout(() => {
+      if (isLyricsLoading.value && fetchedLyricLines.value.length === 0) {
+        console.log('Timeout ładowania playera - wymuszam tekst');
+        isLyricsLoading.value = false;
+      }
+    }, 5000)
+  }
   else { stopPlaybackTimer(); currentTime.value = 0; if(player.value) player.value.destroy(); }
+
 }, { immediate: true });
 
 watch(uniqueSongKey, async (newKey, oldKey) => {
@@ -402,14 +422,12 @@ onUnmounted(() => {
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
-  padding: 30px;
+  padding: 20px;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-
-  min-height: 600px;
-
+  min-height: auto;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justif-conent: flex-start;
 
   position: relative;
   z-index: 1;
@@ -420,8 +438,8 @@ onUnmounted(() => {
 }
 
 .header-info h3 {
-  font-size: 2.2rem;
-  margin: 0 0 0.7rem 0;
+  font-size: 2rem;
+  margin: 0 0 0.4rem 0;
   background: linear-gradient(90deg, #fff, #aab2c2);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -500,8 +518,6 @@ onUnmounted(() => {
   height: 200px;
   box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
   border: 1px solid rgba(255, 255, 255, 0.05);
-
-  margin-top: 20px;
 }
 
 .teleprompter-container {
@@ -635,6 +651,9 @@ onUnmounted(() => {
   animation: spin 6s linear infinite;
   opacity: 0.4;
   color: #6C63FF;
+  display: inline-flex;
+  width: 1em;
+  height: 1em;
 }
 
 .btn-favorite {
@@ -660,66 +679,58 @@ onUnmounted(() => {
 .btn-favorite.is-favorite i {
   filter: drop-shadow(0 0 5px rgba(255, 101, 132, 0.7));
 }
-.btn-suggest-icon {
-  background: none;
-  border: none;
-  cursor: pointer;
 
-  font-size: 1.8rem;
-  padding: 0;
-  color: #aab2c2;
-
-  transition: color 0.3s, transform 0.2s;
+.controls-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  padding: 0 5px;
 }
 
-.btn-suggest-icon:hover {
-  color: #8a7aff;
-  transform: scale(1.1);
-}
-
-.btn-suggest-icon:active {
-  transform: scale(0.95);
-}
-
-
-
-.version-control-wrapper {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  z-index: 10;
-
-  display: block;
-  margin: 0;
-  padding: 0;
-}
-
-.btn-version {
-  background: rgba(30, 30, 35, 0.85);
+.btn-control {
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #aab2c2;
-  border-radius: 20px;
-  padding: 6px 14px;
-  font-size: 0.85rem;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  backdrop-filter: blur(4px);
+  transition: all 0.2s ease;
   font-family: inherit;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
-.btn-version:hover {
+.btn-control:hover {
   background: rgba(255, 255, 255, 0.15);
   color: #fff;
   border-color: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
 }
 
-.btn-version:active {
+.btn-control:active {
   transform: translateY(0);
+}
+
+.version-counter {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #fff;
+  font-weight: bold;
+}
+
+.icon-refresh {
+  font-size: 1.1rem;
+  transition: transform 0.5s ease;
+}
+
+.btn-control:hover .icon-refresh {
+  transform: rotate(180deg);
+  color: #8a7aff;
 }
 
 .icon-refresh {
