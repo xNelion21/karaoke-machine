@@ -25,7 +25,10 @@
     "btn_login": "Log in",
     "btn_register": "Sign up",
     "btn_facebook": "Continue with Facebook",
-    "or": "OR"
+    "or": "OR",
+    "logged_as": "Logged in as:",
+    "admin_panel": "Admin panel",
+    "logout": "Log out"
   },
   "app": {
     "search_placeholder": "Enter title...",

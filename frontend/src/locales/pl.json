@@ -26,7 +26,10 @@
     "btn_login": "Zaloguj się",
     "btn_register": "Zarejestruj się",
     "btn_facebook": "Kontynuuj z Facebook",
-    "or": "LUB"
+    "or": "LUB",
+    "logged_as": "Zalogowany jako:",
+    "admin_panel": "Panel administratora",
+    "logout": "Wyloguj się"
   },
   "app": {
     "search_placeholder": "Wpisz tytuł...",

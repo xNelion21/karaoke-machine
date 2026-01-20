@@ -3,7 +3,7 @@
     <div class="container-fluid">
       <router-link to="/" class="navbar-brand mx-md-3">Singly</router-link>
 
-      <div class="d-flex align-items-center">
+      <div class="d-flex align-items-center mx-md-3">
 
         <div class="nav-item dropdown me-3 lang-dropdown" ref="langDropdownRef">
           <a class="nav-link dropdown-toggle d-flex align-items-center"
@@ -29,10 +29,10 @@
 
         <template v-if="!authStore.isAuthenticated">
           <button @click="goLogin" class="btn btn-outline-light me-3">
-            Zaloguj się
+            {{ $t('auth.login_header') }}
           </button>
           <button @click="goRegister" class="btn btn-primary">
-            Zarejestruj się
+            {{ $t('auth.register_header') }}
           </button>
         </template>
 
@@ -48,14 +48,14 @@
             </a>
             <ul class="dropdown-menu dropdown-menu-end" :class="{ show: isProfileDropdownOpen }">
               <li>
-                <span class="dropdown-item-text fw-bold">Zalogowany jako: </span>
+                <span class="dropdown-item-text fw-bold">{{ $t('auth.logged_as') }}</span>
                 <span class="dropdown-item-text fw-bold text-primary text-truncate">{{ authStore.username }}</span>
               </li>
 
               <li v-if="authStore.user?.role === 'ROLE_ADMIN'">
                 <hr class="dropdown-divider">
                 <router-link to="/admin" class="dropdown-item fw-bold">
-                  <i class="bi bi-gear me-2"></i> Panel administratora
+                  <i class="bi bi-gear me-2"></i> {{ $t('auth.admin_panel') }}
                 </router-link>
               </li>
 
@@ -63,7 +63,7 @@
 
               <li>
                 <a class="dropdown-item text-danger fw-bold" href="#" @click.prevent="handleLogout">
-                  <i class="bi bi-box-arrow-right me-2"></i> Wyloguj się
+                  <i class="bi bi-box-arrow-right me-2"></i> {{ $t('auth.logout') }}
                 </a>
               </li>
             </ul>
