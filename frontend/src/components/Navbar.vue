@@ -11,17 +11,17 @@
              role="button"
              @click="toggleLangDropdown"
              :aria-expanded="isLangDropdownOpen ? 'true' : 'false'">
-            <span class="fs-5">{{ currentFlag }}</span>
+            <span class="fs-5 flag" :class="currentFlag"></span>
           </a>
           <ul class="dropdown-menu dropdown-menu-end lang-menu" :class="{ show: isLangDropdownOpen }">
             <li>
               <a class="dropdown-item d-flex align-items-center" href="#" @click.prevent="changeLanguage('pl')">
-                <span class="fs-5 me-2">🇵🇱</span> Polski
+                <span class="fs-5 me-2 fi fi-pl flag"></span> Polski
               </a>
             </li>
             <li>
               <a class="dropdown-item d-flex align-items-center" href="#" @click.prevent="changeLanguage('en')">
-                <span class="fs-5 me-2">🇬🇧</span> English
+                <span class="fs-5 me-2 fi fi-gb flag"></span> English
               </a>
             </li>
           </ul>
@@ -100,7 +100,7 @@ const isLangDropdownOpen = ref(false)
 const langDropdownRef = ref(null)
 
 const currentFlag = computed(() => {
-  return locale.value === 'pl' ? '🇵🇱' : '🇬🇧'
+  return locale.value === 'pl' ? 'fi fi-pl' : 'fi fi-gb'
 })
 
 const toggleLangDropdown = (event) => {
@@ -202,6 +202,12 @@ onUnmounted(() => {
 }
 .nav-item.dropdown .nav-link:hover {
   color: #6C63FF !important;
+}
+
+.flag {
+  border-radius: 5px;
+  width: 20px;
+  height: 20px;
 }
 
 .dropdown-menu {

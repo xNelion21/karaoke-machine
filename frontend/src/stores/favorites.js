@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth.js'
-import { extractYoutubeId, normalizeSong } from "@/utils/songUtils.js";
+import { normalizeSong } from "@/utils/songUtils.js";
 
 export const useFavoritesStore = defineStore('favorites', () => {
     const authStore = useAuthStore()
@@ -41,24 +41,6 @@ export const useFavoritesStore = defineStore('favorites', () => {
         } catch (e) {
             console.error("Błąd pobierania ulubionych", e)
         }
-    }
-
-    async function saveSongToDb(rawSong) {
-        const song = normalizeSong(rawSong);
-        const ytId = song.videoId;
-
-        if (!ytId) throw new Error("Brak Video ID");
-
-        const youtubeDto = {
-            videoId: ytId,
-            title: song.title,
-            thumbnailUrl: song.thumbnailUrl,
-            artist: song.artist,
-            duration: song.duration
-        };
-
-        const response = await axios.post('/songs', youtubeDto);
-        return response.data;
     }
 
     async function toggleFavorite(rawSong) {

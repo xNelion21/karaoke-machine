@@ -56,25 +56,5 @@ export const normalizeSong = (input) => {
         videoId: videoId,
         youtubeUrl: core.youtubeUrl || (videoId ? `https://www.youtube.com/watch?v=${videoId}` : null),
         coverUrl: core.coverUrl || (videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : null),
-        duration: core.duration
     };
 };
-
-export function extractTitle(originalTitle, originalArtist) {
-    let finalArtist = originalArtist;
-    let finalTitle = cleanTitle(originalTitle);
-
-    if (finalTitle.includes(' - ')) {
-        const parts = finalTitle.split(' - ');
-
-        if (parts.length >= 2) {
-            const possibleArtist = parts[0].trim();
-            const possibleTitle = parts[1].trim();
-
-            finalArtist = possibleArtist;
-            finalTitle = possibleTitle;
-        }
-    }
-
-    return { artist: finalArtist, title: finalTitle };
-}

@@ -107,10 +107,6 @@ async function handleSongSelected(song) {
 
 }
 
-function handleSongSelection(song) {
-  songsStore.currentSong = song;
-}
-
 </script>
 
 <style scoped>
