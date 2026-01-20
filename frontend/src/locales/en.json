@@ -42,6 +42,7 @@
   },
   "change": {
     "suggest_change": "Suggest a change",
+    "general": "General",
     "text": "Lyrics",
     "other": "Other",
     "send": "Send",

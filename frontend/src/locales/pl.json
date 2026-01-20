@@ -43,6 +43,7 @@
   },
   "change": {
     "suggest_change": "Zaproponuj poprawkę",
+    "general": "Ogólne",
     "text": "Tekst piosenki",
     "other": "Inne",
     "send": "Wyślij",
