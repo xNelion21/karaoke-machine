@@ -4,6 +4,29 @@
       <router-link to="/" class="navbar-brand mx-md-3">Singly</router-link>
 
       <div class="d-flex align-items-center">
+
+        <div class="nav-item dropdown me-3 lang-dropdown" ref="langDropdownRef">
+          <a class="nav-link dropdown-toggle d-flex align-items-center"
+             href="#"
+             role="button"
+             @click="toggleLangDropdown"
+             :aria-expanded="isLangDropdownOpen ? 'true' : 'false'">
+            <span class="fs-5">{{ currentFlag }}</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end lang-menu" :class="{ show: isLangDropdownOpen }">
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="#" @click.prevent="changeLanguage('pl')">
+                <span class="fs-5 me-2">🇵🇱</span> Polski
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="#" @click.prevent="changeLanguage('en')">
+                <span class="fs-5 me-2">🇬🇧</span> English
+              </a>
+            </li>
+          </ul>
+        </div>
+
         <template v-if="!authStore.isAuthenticated">
           <button @click="goLogin" class="btn btn-outline-light me-3">
             Zaloguj się
@@ -53,9 +76,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import {useI18n} from "vue-i18n";
 
 defineProps({
   showSearch: {
@@ -70,8 +94,31 @@ const authStore = useAuthStore()
 const isProfileDropdownOpen = ref(false)
 const profileDropdownRef = ref(null)
 
+const { locale } = useI18n()
+
+const isLangDropdownOpen = ref(false)
+const langDropdownRef = ref(null)
+
+const currentFlag = computed(() => {
+  return locale.value === 'pl' ? '🇵🇱' : '🇬🇧'
+})
+
+const toggleLangDropdown = (event) => {
+  if(event) event.preventDefault()
+  isLangDropdownOpen.value = !isLangDropdownOpen.value
+  isProfileDropdownOpen.value = false
+}
+
+const changeLanguage = (lang) => {
+  locale.value = lang
+  localStorage.setItem('user-locale', lang)
+  isLangDropdownOpen.value = false
+}
+
+
 const toggleProfileDropdown = () => {
   isProfileDropdownOpen.value = !isProfileDropdownOpen.value
+  isLangDropdownOpen.value = false
 }
 
 const closeProfileDropdown = () => {
@@ -96,6 +143,10 @@ const handleClickOutside = (event) => {
   if (profileDropdownRef.value && !profileDropdownRef.value.contains(event.target)) {
     closeProfileDropdown()
   }
+
+  if (langDropdownRef.value && !langDropdownRef.value.contains(event.target)) {
+    isLangDropdownOpen.value = false
+  }
 }
 
 onMounted(() => {
@@ -116,7 +167,7 @@ onUnmounted(() => {
   background: rgba(24, 24, 24);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  z-index: 1050;
+  z-index: 2000;
 }
 
 .navbar-brand {
