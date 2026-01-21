@@ -35,13 +35,11 @@ public class SongController {
     }
 
     @PostMapping
-    public ResponseEntity<SongResponseDTO> createSong(@Valid @RequestBody SongRequestDTO songRequestDTO) {
-        // @Valid uruchamia walidację zdefiniowaną w SongRequestDTO
-        SongResponseDTO newSong = songService.createSong(songRequestDTO);
-        // Zwracamy 201 Created
+    public ResponseEntity<SongResponseDTO> createSong(@Valid @RequestBody YoutubeSongDto youtubeSongDto) {
+        SongResponseDTO newSong = songService.importFromYoutube(youtubeSongDto);
+
         return new ResponseEntity<>(newSong, HttpStatus.CREATED);
     }
-
 
     @PutMapping("/{id}")
     public ResponseEntity<SongResponseDTO> updateSong(
