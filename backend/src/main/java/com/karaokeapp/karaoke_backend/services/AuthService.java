@@ -4,6 +4,7 @@ import com.karaokeapp.karaoke_backend.dto.RegisterRequest;
 import com.karaokeapp.karaoke_backend.models.Role;
 import com.karaokeapp.karaoke_backend.models.User;
 import com.karaokeapp.karaoke_backend.repositories.UserRepository;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -48,6 +49,13 @@ public class AuthService {
                 )
         );
 
+        User user = userRepository.findByUsername(request.getUsername()).orElse(null);
+
+        assert user != null;
+        if (!user.isAccountNonLocked()) {
+            throw new LockedException("Konto jest zablokowane!");
+        }
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         return jwtService.generateToken(userDetails);
@@ -66,8 +74,8 @@ public class AuthService {
                     return userRepository.save(newUser);
                 });
 
-        if (user.isLocked()) {
-            throw new RuntimeException("Twoje konto jest zablokowane!");
+        if (!user.isAccountNonLocked()) {
+            throw new LockedException("Konto jest zablokowane!");
         }
 
         return jwtService.generateToken(user);
