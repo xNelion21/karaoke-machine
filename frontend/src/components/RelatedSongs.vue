@@ -3,7 +3,7 @@
     <h2 class="h5 sidebar-title">
       <i class="bi bi-shuffle me-2 text-accent"></i>
       {{ $t('app.related') }}
-      <span v-if="genre" class="badge-genre ms-2">{{ genre }}</span>
+      <span v-if="category" class="badge-genre ms-2">{{ category }}</span>
     </h2>
 
     <div v-if="songsStore.isRelatedLoading" class="text-center mt-5">
@@ -54,7 +54,7 @@ const props = defineProps({
 defineEmits(['select-song']);
 
 const songsStore = useSongsStore();
-const genre = ref('');
+const category = ref('');
 
 const getArtistName = (song) => {
   const data = song.song || song;

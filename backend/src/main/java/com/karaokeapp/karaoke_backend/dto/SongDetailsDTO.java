@@ -8,7 +8,6 @@ import java.util.Set;
 public class SongDetailsDTO {
     private Long id;
     private String title;
-    private String genre;
     private String lyrics;
     private Set<String> authors;
     private Set<String> categories;

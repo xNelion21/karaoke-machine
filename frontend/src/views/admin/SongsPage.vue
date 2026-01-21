@@ -86,7 +86,7 @@ const tableRef = ref(null)
 
 const form = ref({
   title: '',
-  genre: '',
+  category: '',
   lyrics: '',
   youtubeUrl: '',
   authorId: ''
@@ -114,7 +114,7 @@ function openEdit(song) {
   editingSong.value = song.id
   form.value = {
     title: song.title,
-    genre: song.genre,
+    category: song.category,
     lyrics: song.lyrics,
     youtubeUrl: song.youtubeUrl,
     authorId: song.authorIds?.length ? song.authorIds[0] : ''
@@ -127,7 +127,7 @@ async function saveSong() {
 
   const payload = {
     title: form.value.title,
-    genre: form.value.genre,
+    category: form.value.category,
     lyrics: form.value.lyrics,
     youtubeUrl: form.value.youtubeUrl,
     authorsIds: [form.value.authorId],

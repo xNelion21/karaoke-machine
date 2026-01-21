@@ -38,9 +38,14 @@ import axios from 'axios'
 
 const props = defineProps({
   songId: {
-    type: Number,
-    required: true
+    type: [Number, null],
+    default: null
   },
+  youtubeData: {
+    type: Object,
+    default: null
+  },
+
   initialLyrics: {
     type: String,
     default: ''
@@ -66,6 +71,7 @@ async function submit() {
 
   const payload = {
     songId: props.songId,
+    youtubeSongData: props.songId ? null : props.youtubeData,
     proposedContent: `[${category.value}]\n${content.value.trim()}`
   }
 

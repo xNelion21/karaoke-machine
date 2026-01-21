@@ -34,9 +34,8 @@ public class Suggestion {
 
     private java.time.LocalDateTime createdAt = java.time.LocalDateTime.now();
 
-
     @Lob
     private String proposedLyrics;
-    private String proposedGenre;
+
 
 }

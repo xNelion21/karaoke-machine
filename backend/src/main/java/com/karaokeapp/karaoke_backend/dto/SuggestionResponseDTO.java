@@ -14,13 +14,11 @@ public class SuggestionResponseDTO {
     private Long songId;
     private String songTitle;
     private String currentLyrics;
-    private String currentGenre;
+    private Set<String> currentCategories;
 
     private Long userId;
     private String username;
-
     private String proposedLyrics;
-    private String proposedGenre;
     private Set<Long> proposedAuthorIds;
     private Set<Long> proposedCategoryIds;
     private String proposedContent;

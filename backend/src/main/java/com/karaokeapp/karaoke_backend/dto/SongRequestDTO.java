@@ -17,7 +17,7 @@ public class SongRequestDTO {
     private String title;
 
     @Size(max = 50, message = "Gatunek jest za długi")
-    private String genre;
+    private Set<String> categories;
     private String lyrics;
     private String youtubeUrl;
 

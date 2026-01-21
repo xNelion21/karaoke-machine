@@ -9,12 +9,13 @@ import java.util.Set;
 @Data
 public class SuggestionRequestDTO {
 
-    @NotNull(message = "ID piosenki jest wymagane")
     private Long songId;
+    private Set<String> currentCategories;
+    private YoutubeSongDto youtubeSongData;
     private String proposedLyrics;
-    private String proposedGenre;
     private Set<Long> proposedAuthorIds;
     private Set<Long> proposedCategoryIds;
     private String proposedContent;
+
 
 }
