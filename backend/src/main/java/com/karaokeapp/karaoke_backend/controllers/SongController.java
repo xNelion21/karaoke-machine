@@ -48,12 +48,10 @@ public class SongController {
             @PathVariable Long id,
             @Valid @RequestBody SongRequestDTO songRequestDTO) {
 
-
         SongResponseDTO updatedSong = songService.updateSong(id, songRequestDTO);
         return ResponseEntity.ok(updatedSong);
     }
 
-    // 5. USUWANIE PIOSENKI (DELETE /api/songs/{id})
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSong(@PathVariable Long id) {
 
@@ -79,6 +77,10 @@ public class SongController {
 
     @PostMapping("/suggest")
     public ResponseEntity<Void> submitSuggestion(@Valid @RequestBody SuggestionRequestDTO suggestionDTO) {
+        System.out.println("Otrzymano sugestię. SongId: " + suggestionDTO.getSongId());
+        if (suggestionDTO.getYoutubeSongData() != null) {
+            System.out.println("Sugestia dotyczy nowej piosenki z YouTube: " + suggestionDTO.getYoutubeSongData().getTitle());
+        }
         songService.submitSuggestion(suggestionDTO);
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }

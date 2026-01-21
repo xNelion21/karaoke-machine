@@ -6,24 +6,15 @@ import com.karaokeapp.karaoke_backend.repositories.SongRepository;
 import com.karaokeapp.karaoke_backend.repositories.SuggestionRepository;
 import com.karaokeapp.karaoke_backend.repositories.UserRepository;
 import com.karaokeapp.karaoke_backend.repositories.AuthorRepository;
-import com.karaokeapp.karaoke_backend.dto.*;
-import com.karaokeapp.karaoke_backend.repositories.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.ResponseStatus;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -127,21 +118,32 @@ public class SongService {
     }
 
     public void submitSuggestion(SuggestionRequestDTO dto) {
+        Song song;
 
-        Song song = songRepository.findById(dto.getSongId())
-                .orElseThrow(() -> new ResourceNotFoundException("Piosenka o ID " + dto.getSongId() + " nie istnieje."));
-
+        if ((dto.getProposedLyrics() == null || dto.getProposedLyrics().isBlank()) &&
+                (dto.getProposedContent() == null || dto.getProposedContent().isBlank())) {
+            throw new BadRequestException("Sugestia musi zawierać treść poprawki lub nowy tekst piosenki.");
+        }
+        if (dto.getSongId() != null) {
+            song = songRepository.findById(dto.getSongId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Piosenka o ID " + dto.getSongId() + " nie istnieje."));
+        }
+        else if (dto.getYoutubeSongData() != null) {
+            song = getOrCreateSong(dto.getYoutubeSongData());
+        }
+        else {
+            throw new BadRequestException("Brak identyfikatora lub danych piosenki.");
+        }
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Zalogowany użytkownik nie istnieje."));
+                .orElseThrow(() -> new ResourceNotFoundException("Użytkownik nie istnieje."));
 
         Suggestion suggestion = new Suggestion();
         suggestion.setSong(song);
         suggestion.setUser(user);
         suggestion.setProposedLyrics(dto.getProposedLyrics());
         suggestion.setProposedContent(dto.getProposedContent());
-        suggestion.setProposedGenre(dto.getProposedGenre());
         suggestion.setStatus(SuggestionStatus.PENDING);
 
         suggestionRepository.save(suggestion);

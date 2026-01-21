@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,16 +28,19 @@ public class AdminService {
     }
 
     private SuggestionResponseDTO mapToResponseDTO(Suggestion s) {
+        Song song = s.getSong();
         return SuggestionResponseDTO.builder()
+
                 .id(s.getId())
                 .songId(s.getSong().getId())
                 .songTitle(s.getSong().getTitle())
-                .currentLyrics(s.getSong().getLyrics())
-                .currentGenre(s.getSong().getGenre())
                 .userId(s.getUser().getId())
                 .username(s.getUser().getUsername())
+                .currentLyrics(s.getSong().getLyrics())
+                .currentCategories(song.getCategories().stream()
+                        .map(Category::getName)
+                        .collect(Collectors.toSet()))
                 .proposedLyrics(s.getProposedLyrics())
-                .proposedGenre(s.getProposedGenre())
                 .proposedContent(s.getProposedContent())
                 .status(s.getStatus())
                 .createdAt(s.getCreatedAt())
@@ -56,9 +60,6 @@ public class AdminService {
 
             if (suggestion.getProposedLyrics() != null) {
                 song.setLyrics(suggestion.getProposedLyrics());
-            }
-            if (suggestion.getProposedGenre() != null) {
-                song.setGenre(suggestion.getProposedGenre());
             }
 
             songRepository.save(song);
