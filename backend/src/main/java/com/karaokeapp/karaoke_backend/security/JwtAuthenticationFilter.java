@@ -9,6 +9,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import javax.security.auth.login.LoginException;
 import java.io.IOException;
 
 @Component
@@ -73,6 +75,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             logger.error("Nieprawidłowy podpis tokena: " + e.getMessage());
             handleException(response, "Nieprawidłowy podpis tokena JWT.");
             return;
+        } catch (LockedException e) {
+            logger.error("Zablokowane konto: " + e.getMessage());
+            handleForbidden(response, "Twoje konto jest zablokowane.");
+            return;
         } catch (Exception e) {
             logger.error("Błąd podczas przetwarzania tokena: " + e.getMessage());
             handleException(response, "Błąd autoryzacji.");
@@ -83,6 +89,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
     private void handleException(HttpServletResponse response, String message) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"error\": \"" + message + "\"}");
+    }
+
+    private void handleForbidden(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.setContentType("application/json;charset=UTF-8");
         response.getWriter().write("{\"error\": \"" + message + "\"}");
     }
