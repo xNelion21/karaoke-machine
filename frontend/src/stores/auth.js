@@ -3,7 +3,7 @@ import axios from 'axios'
 import {useSongsStore} from "@/stores/songs.js";
 import {useFavoritesStore} from "@/stores/favorites.js";
 
-axios.defaults.baseURL = 'http://localhost:8080/api';
+axios.defaults.baseURL = (import.meta.env.VITE_APP_API_URL || 'http://localhost:8080') + '/api';
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({

@@ -26,8 +26,7 @@ class SongRequestDtoTest {
     void shouldPassValidation_WhenAllFieldsAreCorrect() {
         SongRequestDTO dto = new SongRequestDTO();
         dto.setTitle("Poprawny Tytuł");
-        dto.setAuthorsIds(Set.of(1L, 2L));
-        dto.setGenre("Rock");
+        dto.setCategory("Rock");
         dto.setLyrics("La la la");
 
         Set<ConstraintViolation<SongRequestDTO>> violations = validator.validate(dto);
@@ -39,7 +38,7 @@ class SongRequestDtoTest {
     void shouldFailValidation_WhenTitleIsBlank() {
         SongRequestDTO dto = new SongRequestDTO();
         dto.setTitle("");
-        dto.setAuthorsIds(Set.of(1L));
+        // dto.setAuthorsIds(Set.of(1L)); - cos bledy zwraca
 
         Set<ConstraintViolation<SongRequestDTO>> violations = validator.validate(dto);
 

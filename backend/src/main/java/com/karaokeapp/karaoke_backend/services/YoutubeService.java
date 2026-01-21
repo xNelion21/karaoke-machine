@@ -13,7 +13,7 @@ import java.util.Map;
 @Service
 public class YoutubeService {
 
-    @Value("${youtube.api.key}")
+    @Value("${YOUTUBE_API_KEY}")
     private String apiKey;
 
     private final String YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3/search";
@@ -21,7 +21,7 @@ public class YoutubeService {
     public List<YoutubeSongDto> searchSongs(String query) {
         RestTemplate restTemplate = new RestTemplate();
 
-        String url = String.format("%s?part=snippet&q=%s+karaoke&type=video&maxResults=10&key=%s",
+        String url = String.format("%s?part=snippet&q=%s+official+audio&type=video&videoCategoryId=10&maxResults=10&key=%s",
                 YOUTUBE_API_URL, query, apiKey);
 
         try {
@@ -66,6 +66,8 @@ public class YoutubeService {
             }
             return songs;
         } catch (Exception e) {
+            System.out.println("BŁĄD PODCZAS SZUKANIA W YOUTUBE: " + e.getMessage());
+            e.printStackTrace();
             return new ArrayList<>();
         }
     }

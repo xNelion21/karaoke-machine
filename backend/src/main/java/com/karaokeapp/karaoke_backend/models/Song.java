@@ -4,9 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -22,9 +20,10 @@ public class Song {
     @Column(nullable = false, unique = true)
     private String title;
 
-    private String genre;
+
 
     @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String lyrics;
 
     @ManyToMany
@@ -42,9 +41,6 @@ public class Song {
             inverseJoinColumns = @JoinColumn(name = "author_id")
     )
     private Set<Author> authors = new HashSet<>();
-
-    @OneToMany(mappedBy = "song", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<LyricLine> lyricLines = new ArrayList<>();
 
     @Column(name = "youtube_url")
     private String youtubeUrl;

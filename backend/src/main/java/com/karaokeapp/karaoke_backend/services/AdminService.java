@@ -7,7 +7,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -18,8 +17,6 @@ public class AdminService {
 
     private final SuggestionRepository suggestionRepository;
     private final SongRepository songRepository;
-    private final AuthorRepository authorRepository;
-    private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
 
 
@@ -31,24 +28,26 @@ public class AdminService {
     }
 
     private SuggestionResponseDTO mapToResponseDTO(Suggestion s) {
+        Song song = s.getSong();
         return SuggestionResponseDTO.builder()
+
                 .id(s.getId())
                 .songId(s.getSong().getId())
                 .songTitle(s.getSong().getTitle())
-                .currentLyrics(s.getSong().getLyrics())
-                .currentGenre(s.getSong().getGenre())
                 .userId(s.getUser().getId())
                 .username(s.getUser().getUsername())
+                .currentLyrics(s.getSong().getLyrics())
+                .currentCategories(song.getCategories().stream()
+                        .map(Category::getName)
+                        .collect(Collectors.toSet()))
                 .proposedLyrics(s.getProposedLyrics())
-                .proposedGenre(s.getProposedGenre())
-                .proposedAuthorIds(s.getProposedAuthorIds())
-                .proposedCategoryIds(s.getProposedCategoryIds())
                 .proposedContent(s.getProposedContent())
                 .status(s.getStatus())
                 .createdAt(s.getCreatedAt())
                 .build();
     }
 
+    @Transactional
     public void processSuggestion(Long suggestionId, SuggestionStatus newStatus) {
         Suggestion suggestion = suggestionRepository.findById(suggestionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Propozycja o ID " + suggestionId + " nie istnieje."));
@@ -62,17 +61,7 @@ public class AdminService {
             if (suggestion.getProposedLyrics() != null) {
                 song.setLyrics(suggestion.getProposedLyrics());
             }
-            if (suggestion.getProposedGenre() != null) {
-                song.setGenre(suggestion.getProposedGenre());
-            }
-            if (suggestion.getProposedAuthorIds() != null && !suggestion.getProposedAuthorIds().isEmpty()) {
-                Set<Author> newAuthors = new HashSet<>(authorRepository.findAllById(suggestion.getProposedAuthorIds()));
-                song.setAuthors(newAuthors);
-            }
-            if (suggestion.getProposedCategoryIds() != null && !suggestion.getProposedCategoryIds().isEmpty()) {
-                Set<Category> newCategories = new HashSet<>(categoryRepository.findAllById(suggestion.getProposedCategoryIds()));
-                song.setCategories(newCategories);
-            }
+
             songRepository.save(song);
 
         }

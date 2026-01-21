@@ -33,9 +33,21 @@
     "no_results": "No results found",
     "no_favorites": "No favorite songs found.",
     "no_related": "No songs found from genre",
-    "related": "Related songs",
+    "related": "You may also like",
     "loading": "Loading...",
-    "select_song": "Select a song to see related tracks."
+    "select_song": "Select a song to see related tracks.",
+    "suggest_change": "Suggest a change",
+    "send": "Send",
+    "cancel": "Cancel"
+  },
+  "change": {
+    "suggest_change": "Suggest a change",
+    "general": "General",
+    "text": "Lyrics",
+    "other": "Other",
+    "send": "Send",
+    "cancel": "Cancel",
+    "suggestion": "Describe the issue"
   },
   "player": {
     "no_video" : "No video found for this song.",
