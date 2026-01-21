@@ -32,13 +32,12 @@ const routes = [
     {
         path: '/admin',
         component: () => import('@/views/admin/AdminLayout.vue'),
-        meta: { requiresAuth: true, requiresAdmin: true },
+        meta: { title: 'Panel administratora', requiresAuth: true, requiresAdmin: true},
         children: [
             {
                 path: '',
                 name: 'admin-dashboard',
                 component: () => import('@/views/admin/StatsPage.vue'),
-                meta: { title: 'Panel administratora' }
             },
             {
                 path: 'users',

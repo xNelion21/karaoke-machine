@@ -73,6 +73,44 @@ export const useSongsStore = defineStore('songs', {
             }
         },
 
+        fetchRelatedSongs(category, currentSongId) {
+            this.relatedSongs = [];
+            this.isRelatedLoading = true;
+
+            setTimeout(() => {
+                try {
+                    const numericCurrentId = Number(currentSongId);
+                    let results = this.allSongs.filter(song => {
+                        const sId = Number(song.id || song.song?.id);
+                        if (sId === numericCurrentId) return false;
+
+                        const songCategories = song.categories || song.song?.categories || [];
+
+                        return songCategories.some(cat =>
+                            String(cat).toLowerCase() === String(category).toLowerCase()
+                        );
+                    });
+
+
+                    if (results.length === 0) {
+                        results = this.allSongs.filter(song => {
+                            const sId = Number(song.id || song.song?.id);
+                            return sId !== numericCurrentId;
+                        });
+                    }
+
+                    this.relatedSongs = results
+                        .sort(() => Math.random() - 0.5)
+                        .slice(0, 6);
+
+                } catch (error) {
+                    console.error("Błąd filtrowania:", error);
+                } finally {
+                    this.isRelatedLoading = false;
+                }
+            }, 300);
+        },
+
         async setSearchQuery(query) {
             this.searchQuery = query;
             if (!query) {
@@ -118,43 +156,6 @@ export const useSongsStore = defineStore('songs', {
             this.searchResults = [];
         },
 
-        fetchRelatedSongs(category, currentSongId) {
-            this.relatedSongs = [];
-            this.isRelatedLoading = true;
-
-            setTimeout(() => {
-                try {
-                    const numericCurrentId = Number(currentSongId);
-                    let results = this.allSongs.filter(song => {
-                        const sId = Number(song.id || song.song?.id);
-                        if (sId === numericCurrentId) return false;
-
-                        const songCategories = song.categories || song.song?.categories || [];
-
-                        return songCategories.some(cat =>
-                            String(cat).toLowerCase() === String(category).toLowerCase()
-                        );
-                    });
-
-
-                    if (results.length === 0) {
-                        results = this.allSongs.filter(song => {
-                            const sId = Number(song.id || song.song?.id);
-                            return sId !== numericCurrentId;
-                        });
-                    }
-
-                    this.relatedSongs = results
-                        .sort(() => Math.random() - 0.5)
-                        .slice(0, 6);
-
-                } catch (error) {
-                    console.error("Błąd filtrowania:", error);
-                } finally {
-                    this.isRelatedLoading = false;
-                }
-            }, 300);
-        },
 
         resetState() {
             this.allSongs = [];

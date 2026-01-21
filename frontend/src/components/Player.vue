@@ -97,7 +97,7 @@
 
   <SuggestChange
       v-if="showSuggestModal"
-      :song-id="currentSongId"
+      :song="currentSong"
       :initial-lyrics="currentRawLyrics"
       @close="showSuggestModal = false"
       @submitted="showSuggestModal = false"
@@ -145,6 +145,10 @@ const currentVideoId = computed(() => {
   if (!song) return null;
   if (song.videoId) return song.videoId;
   return extractYoutubeId(song.youtubeUrl || song.videoUrl);
+});
+
+const currentSong = computed(() => {
+  return props.songDetails?.song || props.songDetails || {};
 });
 
 const isFav = computed(() => {
@@ -220,7 +224,7 @@ const activeLineIndex = computed(() => {
 
 function handleToggleFavorite() {
   if (props.songDetails) {
-    favoritesStore.toggleFavorite(props.songDetails);
+    favoritesStore.toggleFavorite(props.songDetails, currentRawLyrics.value);
     emit('favorite-toggled');
   }
 }
@@ -389,7 +393,7 @@ watch(videoId, async (newId) => {
         console.log('Timeout ładowania playera - wymuszam tekst');
         isLyricsLoading.value = false;
       }
-    }, 5000)
+    }, 10000)
   }
   else { stopPlaybackTimer(); currentTime.value = 0; if(player.value) player.value.destroy(); }
 

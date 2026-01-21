@@ -69,7 +69,7 @@ watch(() => props.currentSong, (newSong) => {
 
     const currentCategory = categories.length > 0 ? categories[0] : null;
 
-    genre.value = currentCategory || '';
+    category.value = currentCategory || '';
 
     if (currentCategory) {
       songsStore.fetchRelatedSongs(currentCategory, currentId);

@@ -24,9 +24,6 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Nie znaleziono użytkownika: " + username));
-        if (user.isLocked()) {
-            throw new org.springframework.security.authentication.DisabledException("Twoje konto zostało zablokowane!");
-        }
         List<GrantedAuthority> authorities = List.of(
                 new SimpleGrantedAuthority(user.getRole().name())
         );

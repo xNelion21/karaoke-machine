@@ -157,7 +157,14 @@ public class SongService {
         }
         return song;
     }
-    private Song getOrCreateSong(YoutubeSongDto dto) {
+
+    public SongResponseDTO importFromYoutube(YoutubeSongDto dto) {
+        Song song = getOrCreateSong(dto);
+
+        return songMapper.toResponseDTO(song);
+    }
+
+    public Song getOrCreateSong(YoutubeSongDto dto) {
         String fullYoutubeUrl = "https://www.youtube.com/watch?v=" + dto.getVideoId();
 
         Optional<Song> existingSong = songRepository.findByYoutubeUrl(fullYoutubeUrl);
@@ -170,7 +177,7 @@ public class SongService {
         newSong.setTitle(dto.getTitle());
         newSong.setYoutubeUrl(fullYoutubeUrl);
         newSong.setThumbnailUrl(dto.getThumbnailUrl());
-
+        newSong.setLyrics(dto.getLyrics());
 
         Category defaultCategory = categoryRepository.findById(3L)
                 .orElseGet(() -> {
