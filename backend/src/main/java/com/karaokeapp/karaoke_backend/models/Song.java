@@ -20,7 +20,7 @@ public class Song {
     @Column(nullable = false, unique = true)
     private String title;
 
-    private String genre;
+
 
     @Lob
     @Column(columnDefinition = "LONGTEXT")

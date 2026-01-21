@@ -90,9 +90,7 @@ public class SongService {
         else if (artist != null && !artist.isBlank()) {
             songs = songRepository.findByTitleContainingIgnoreCaseAndAuthors_NameContainingIgnoreCase(query, artist);
         }
-        else if (genre != null && !genre.isBlank()) {
-            songs = songRepository.findByTitleContainingIgnoreCaseAndGenreContainingIgnoreCase(query, genre);
-        }
+
         else {
             songs = songRepository.findByTitleContainingIgnoreCase(query);
         }
@@ -174,7 +172,7 @@ public class SongService {
         newSong.setTitle(dto.getTitle());
         newSong.setYoutubeUrl(fullYoutubeUrl);
         newSong.setThumbnailUrl(dto.getThumbnailUrl());
-        newSong.setGenre("General");
+
 
         Category defaultCategory = categoryRepository.findById(3L)
                 .orElseGet(() -> {

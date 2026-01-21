@@ -63,9 +63,9 @@ public class SongController {
     public ResponseEntity<List<SongResponseDTO>> searchSongs(
             @RequestParam String query,
             @RequestParam(required = false) String artist,
-            @RequestParam(required = false) String genre
+            @RequestParam(required = false) String category
     ) {
-        List<SongResponseDTO> songs = songService.searchSongs(query, artist, genre);
+        List<SongResponseDTO> songs = songService.searchSongs(query, artist, category);
         return ResponseEntity.ok(songs);
     }
 
