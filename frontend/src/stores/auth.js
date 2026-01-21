@@ -91,12 +91,11 @@ export const useAuthStore = defineStore('auth', {
 
                 this.token = token;
                 localStorage.setItem('token', token);
-                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
                 await this.fetchUser();
                 return true;
             } catch (error) {
-                console.error("Błąd backendu:", error);
+                this.errorMessage = error.response?.data?.message || 'Wystąpił błąd podczas rejestracji. Sprawdź poprawność danych.';
                 return false;
             } finally {
                 this.isLoading = false;

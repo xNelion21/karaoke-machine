@@ -37,15 +37,10 @@ import { ref, computed, watch } from 'vue'
 import axios from 'axios'
 
 const props = defineProps({
-  songId: {
-    type: [Number, null],
-    default: null
-  },
-  youtubeData: {
+  song: {
     type: Object,
-    default: null
+    required: true
   },
-
   initialLyrics: {
     type: String,
     default: ''
@@ -56,6 +51,8 @@ const emit = defineEmits(['close', 'submitted'])
 
 const category = ref('GENERAL')
 const content = ref('')
+
+const isSubmitting = ref(false)
 
 const canSubmit = computed(() => content.value.trim().length > 0)
 
@@ -68,20 +65,54 @@ watch(category, (newVal) => {
 }, { immediate: true })
 
 async function submit() {
+  if (isSubmitting.value) return;
+  isSubmitting.value = true;
 
-  const payload = {
-    songId: props.songId,
-    youtubeSongData: props.songId ? null : props.youtubeData,
-    proposedContent: `[${category.value}]\n${content.value.trim()}`
+  try {
+    let targetSongId = props.song.id;
+
+    if (!targetSongId) {
+      const newSongPayload = {
+        videoId: props.song.videoId,
+        title: props.song.title,
+        artist: props.song.artist,
+        thumbnailUrl: props.song.coverUrl,
+        lyrics: props.initialLyrics
+      };
+
+      try {
+        const createResponse = await axios.post('/songs', newSongPayload);
+        targetSongId = createResponse.data.id || createResponse.data;
+      } catch (createError) {
+        console.error("Błąd tworzenia piosenki:", createError);
+        alert("Nie udało się zapisać piosenki w bazie. Sugestia nie może zostać wysłana.");
+        isSubmitting.value = false;
+        return;
+      }
+    }
+
+    const payload = {
+      songId: targetSongId,
+      proposedContent: `[${category.value}]\n${content.value.trim()}`,
+    }
+
+    if (category.value === 'TEXT') {
+      payload.proposedLyrics = content.value.trim();
+    }
+
+    console.log("Wysyłanie sugestii dla ID:", targetSongId);
+    await axios.post('/songs/suggest', payload);
+
+    emit('submitted');
+    emit('close');
+    alert("Sugestia wysłana!"); // Feedback dla użytkownika
+
+  } catch (error) {
+    console.error("Błąd podczas wysyłania sugestii (krok 2):", error);
+    alert("Wystąpił błąd podczas wysyłania sugestii.");
+  } finally {
+    isSubmitting.value = false;
   }
-
-  if (category.value === 'TEXT') {
-    payload.proposedLyrics = content.value.trim();
-  }
-
-  await axios.post('/songs/suggest', payload)
-
-  emit('submitted')
 }
 </script>
 

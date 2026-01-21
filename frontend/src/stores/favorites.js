@@ -43,7 +43,7 @@ export const useFavoritesStore = defineStore('favorites', () => {
         }
     }
 
-    async function toggleFavorite(rawSong) {
+    async function toggleFavorite(rawSong, currentRawLyrics) {
         if (!authStore.isAuthenticated || !authStore.user) {
             alert("Musisz być zalogowany!");
             return;
@@ -95,6 +95,7 @@ export const useFavoritesStore = defineStore('favorites', () => {
                         title: song.title,
                         thumbnailUrl: song.thumbnailUrl,
                         artist: song.artist,
+                        lyrics: currentRawLyrics
                     };
 
                     const response = await axios.post('/songs/like', youtubeDto);
