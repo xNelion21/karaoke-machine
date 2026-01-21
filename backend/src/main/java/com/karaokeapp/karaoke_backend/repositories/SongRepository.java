@@ -21,9 +21,6 @@ public interface SongRepository extends JpaRepository<Song, Long> {
     // szukanie po wykonawcy
     List<Song> findByTitleContainingIgnoreCaseAndAuthors_NameContainingIgnoreCase(String title, String artist);
 
-    // szukanie po tytule lub autorze
-    List<Song> findByTitleContainingIgnoreCaseAndAuthors_NameContainingIgnoreCaseAndGenreIgnoreCase(String title, String artist, String genre);
-
     // szukanie po id kategorii
     List<Song> findByCategories_Id(Long categoryId);
 }

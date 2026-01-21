@@ -77,17 +77,15 @@ public class SongService {
         songRepository.deleteById(id);
     }
 
-    public List<SongResponseDTO> searchSongs(String query, String artist, String genre) {
+    public List<SongResponseDTO> searchSongs(String query, String artist, String category) {
         if (query == null || query.isBlank()) {
             throw new BadRequestException("Parametr wyszukiwania nie może być pusty");
         }
 
         List<Song> songs;
 
-        if (artist != null && !artist.isBlank() && genre != null && !genre.isBlank()) {
-            songs = songRepository.findByTitleContainingIgnoreCaseAndAuthors_NameContainingIgnoreCaseAndGenreIgnoreCase(query,artist, genre);
-        }
-        else if (artist != null && !artist.isBlank()) {
+
+         if (artist != null && !artist.isBlank()) {
             songs = songRepository.findByTitleContainingIgnoreCaseAndAuthors_NameContainingIgnoreCase(query, artist);
         }
 
