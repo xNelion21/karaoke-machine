@@ -7,7 +7,6 @@ import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collections;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -24,26 +23,30 @@ class SongRequestDtoTest {
 
     @Test
     void shouldPassValidation_WhenAllFieldsAreCorrect() {
+
         SongRequestDTO dto = new SongRequestDTO();
         dto.setTitle("Poprawny Tytuł");
-        dto.setCategory("Rock");
+        dto.setCategories(Set.of("Rock"));
         dto.setLyrics("La la la");
+        dto.setYoutubeUrl("https://youtube.com/xyz");
 
         Set<ConstraintViolation<SongRequestDTO>> violations = validator.validate(dto);
 
-        assertTrue(violations.isEmpty());
+        assertTrue(violations.isEmpty(), "Walidacja powinna przejść pomyślnie dla poprawnych danych");
     }
 
     @Test
     void shouldFailValidation_WhenTitleIsBlank() {
+
         SongRequestDTO dto = new SongRequestDTO();
         dto.setTitle("");
-        // dto.setAuthorsIds(Set.of(1L)); - cos bledy zwraca
+        dto.setCategories(Set.of("Pop"));
 
         Set<ConstraintViolation<SongRequestDTO>> violations = validator.validate(dto);
 
-        assertFalse(violations.isEmpty());
-        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("title")));
+        assertFalse(violations.isEmpty(), "Walidacja powinna wykryć błąd");
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("title")),
+                "Błąd powinien dotyczyć pola 'title'");
     }
 
     @Test
@@ -51,24 +54,15 @@ class SongRequestDtoTest {
         SongRequestDTO dto = new SongRequestDTO();
         String longTitle = "A".repeat(101);
         dto.setTitle(longTitle);
-        dto.setAuthorsIds(Set.of(1L));
+        dto.setCategories(Set.of("Metal"));
 
         Set<ConstraintViolation<SongRequestDTO>> violations = validator.validate(dto);
 
         assertFalse(violations.isEmpty());
-        String message = violations.iterator().next().getMessage();
-        assertEquals("Tytuł piosenki jest za długi", message);
-    }
 
-    @Test
-    void shouldFailValidation_WhenAuthorsListIsEmpty() {
-        SongRequestDTO dto = new SongRequestDTO();
-        dto.setTitle("Dobra piosenka");
-        dto.setAuthorsIds(Collections.emptySet());
+        boolean hasCorrectMessage = violations.stream()
+                .anyMatch(v -> v.getMessage().equals("Tytuł piosenki jest za długi"));
 
-        Set<ConstraintViolation<SongRequestDTO>> violations = validator.validate(dto);
-
-        assertFalse(violations.isEmpty());
-        assertTrue(violations.stream().anyMatch(v -> v.getMessage().contains("Przynajmniej jeden autor")));
+        assertTrue(hasCorrectMessage, "Powinien wystąpić błąd o zbyt długim tytule");
     }
 }

@@ -30,7 +30,6 @@ class YoutubeServiceTest {
 
         Map<String, Object> fakeResponse = createFakeYoutubeResponse();
 
-
         try (MockedConstruction<RestTemplate> mocked = mockConstruction(RestTemplate.class,
                 (mock, context) -> {
                     when(mock.getForObject(anyString(), eq(Map.class))).thenReturn(fakeResponse);
@@ -45,6 +44,8 @@ class YoutubeServiceTest {
             assertEquals("Queen", song.getArtist());
             assertEquals("Bohemian Rhapsody", song.getTitle());
             assertEquals("testId123", song.getVideoId());
+
+            assertNull(song.getLyrics(), "Tekst piosenki w wynikach wyszukiwania powinien być domyślnie null");
         }
     }
 

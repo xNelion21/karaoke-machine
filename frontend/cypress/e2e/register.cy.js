@@ -8,7 +8,7 @@ describe('Test Aplikacji Singly', () => {
 
         // 2. Wchodzimy na stronę i klikamy przycisk Rejestracji
         cy.visit('http://localhost:5173')
-        cy.contains('Zarejestruj się').click()
+        cy.contains('Załóż konto').click()
 
         // 3. Wypełniamy formularz
 

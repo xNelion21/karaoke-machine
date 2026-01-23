@@ -7,28 +7,27 @@ class SongTest {
 
     @Test
     void shouldSetAndGetBasicFields() {
-
         Song song = new Song();
         String title = "Ostatnia nocka";
         String ytUrl = "https://youtube.com/watch?v=123";
         String thumb = "http://img.com/1.jpg";
-
+        String lyrics = "To jest tekst piosenki";
 
         song.setTitle(title);
         song.setYoutubeUrl(ytUrl);
         song.setThumbnailUrl(thumb);
+        song.setLyrics(lyrics);
         song.setId(1L);
 
         assertEquals("Ostatnia nocka", song.getTitle());
         assertEquals("https://youtube.com/watch?v=123", song.getYoutubeUrl());
         assertEquals("http://img.com/1.jpg", song.getThumbnailUrl());
+        assertEquals("To jest tekst piosenki", song.getLyrics());
         assertEquals(1L, song.getId());
     }
 
-
     @Test
     void shouldInitializeEmptyCollections_NotReturnNull() {
-
         Song song = new Song();
 
         assertNotNull(song.getAuthors(), "Lista autorów nie może być nullem!");
@@ -37,13 +36,11 @@ class SongTest {
         assertNotNull(song.getCategories(), "Lista kategorii nie może być nullem!");
         assertTrue(song.getCategories().isEmpty());
 
-        assertNotNull(song.getLyricLines(), "Lista linii tekstu nie może być nullem!");
-        assertTrue(song.getLyricLines().isEmpty());
+        assertNull(song.getLyrics(), "Pole lyrics (String) domyślnie powinno być null");
     }
 
     @Test
     void shouldVerifyEqualityBetweenSongs() {
-
         Song song1 = new Song();
         song1.setTitle("Test Song");
         song1.setYoutubeUrl("url1");
