@@ -21,6 +21,7 @@ public class SongController {
 
     private final SongService songService;
     private final YoutubeService youtubeService;
+
     @GetMapping
     public ResponseEntity<List<SongResponseDTO>> getAllSongs() {
         List<SongResponseDTO> songs = songService.getAllSongs();
@@ -28,31 +29,41 @@ public class SongController {
     }
 
     // 2. POBIERANIE SZCZEGÓŁÓW PIOSENKI (GET /api/songs/{id})
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public ResponseEntity<SongDetailsDTO> getSongById(@PathVariable Long id) {
         SongDetailsDTO song = songService.getSongById(id);
         return ResponseEntity.ok(song);
     }
 
+    // RĘCZNE DODAWANIE PIOSENKI
     @PostMapping
-    public ResponseEntity<SongResponseDTO> createSong(@Valid @RequestBody YoutubeSongDto youtubeSongDto) {
-        SongResponseDTO newSong = songService.importFromYoutube(youtubeSongDto);
-
+    public ResponseEntity<SongResponseDTO> createSong(
+            @Valid @RequestBody SongRequestDTO songRequestDTO
+    ) {
+        SongResponseDTO newSong = songService.createSong(songRequestDTO);
         return new ResponseEntity<>(newSong, HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
+    // IMPORT Z YOUTUBE
+    @PostMapping("/import")
+    public ResponseEntity<SongResponseDTO> importFromYoutube(
+            @Valid @RequestBody YoutubeSongDto youtubeSongDto
+    ) {
+        SongResponseDTO newSong = songService.importFromYoutube(youtubeSongDto);
+        return new ResponseEntity<>(newSong, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{id:\\d+}")
     public ResponseEntity<SongResponseDTO> updateSong(
             @PathVariable Long id,
-            @Valid @RequestBody SongRequestDTO songRequestDTO) {
-
+            @Valid @RequestBody SongRequestDTO songRequestDTO
+    ) {
         SongResponseDTO updatedSong = songService.updateSong(id, songRequestDTO);
         return ResponseEntity.ok(updatedSong);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public ResponseEntity<Void> deleteSong(@PathVariable Long id) {
-
         songService.deleteSong(id);
         return ResponseEntity.noContent().build();
     }
@@ -68,38 +79,47 @@ public class SongController {
     }
 
     @GetMapping("/by-category/{categoryId}")
-    public ResponseEntity<List<SongResponseDTO>> getSongsByCategory(@PathVariable Long categoryId) {
+    public ResponseEntity<List<SongResponseDTO>> getSongsByCategory(
+            @PathVariable Long categoryId
+    ) {
         List<SongResponseDTO> songs = songService.getSongsByCategory(categoryId);
         return ResponseEntity.ok(songs);
     }
 
     @PostMapping("/suggest")
-    public ResponseEntity<Void> submitSuggestion(@Valid @RequestBody SuggestionRequestDTO suggestionDTO) {
-        System.out.println("Otrzymano sugestię. SongId: " + suggestionDTO.getSongId());
-        if (suggestionDTO.getYoutubeSongData() != null) {
-            System.out.println("Sugestia dotyczy nowej piosenki z YouTube: " + suggestionDTO.getYoutubeSongData().getTitle());
-        }
+    public ResponseEntity<Void> submitSuggestion(
+            @Valid @RequestBody SuggestionRequestDTO suggestionDTO
+    ) {
         songService.submitSuggestion(suggestionDTO);
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 
     @GetMapping("/search-online")
-    public ResponseEntity<List<YoutubeSongDto>> searchOnline(@RequestParam String query) {
+    public ResponseEntity<List<YoutubeSongDto>> searchOnline(
+            @RequestParam String query
+    ) {
         List<YoutubeSongDto> results = youtubeService.searchSongs(query);
         return ResponseEntity.ok(results);
     }
 
     @PostMapping("/like")
-    public ResponseEntity<Song> likeSong(@RequestBody YoutubeSongDto youtubeSongDto) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+    public ResponseEntity<Song> likeSong(
+            @RequestBody YoutubeSongDto youtubeSongDto
+    ) {
+        String username = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
         Song savedSong = songService.likeYoutubeSong(youtubeSongDto, username);
         return ResponseEntity.ok(savedSong);
     }
 
-
     @GetMapping("/my-liked-songs")
     public ResponseEntity<Set<Song>> getMyLikedSongs() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
         Set<Song> mySongs = songService.getSongsForUser(username);
         return ResponseEntity.ok(mySongs);
     }
