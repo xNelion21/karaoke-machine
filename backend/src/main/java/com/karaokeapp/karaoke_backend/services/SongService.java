@@ -1,20 +1,15 @@
 package com.karaokeapp.karaoke_backend.services;
+
 import com.karaokeapp.karaoke_backend.dto.*;
 import com.karaokeapp.karaoke_backend.models.*;
-import com.karaokeapp.karaoke_backend.repositories.CategoryRepository;
-import com.karaokeapp.karaoke_backend.repositories.SongRepository;
-import com.karaokeapp.karaoke_backend.repositories.SuggestionRepository;
-import com.karaokeapp.karaoke_backend.repositories.UserRepository;
-import com.karaokeapp.karaoke_backend.repositories.AuthorRepository;
+import com.karaokeapp.karaoke_backend.repositories.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.ResponseStatus;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -23,8 +18,6 @@ class BadRequestException extends RuntimeException {
         super(message);
     }
 }
-
-
 
 @Service
 @RequiredArgsConstructor
@@ -38,18 +31,22 @@ public class SongService {
     private final AuthorRepository authorRepository;
 
     public SongResponseDTO createSong(SongRequestDTO requestDTO) {
+        if (requestDTO.getTitle() == null || requestDTO.getTitle().isBlank()) {
+            throw new BadRequestException("Tytuł piosenki jest wymagany");
+        }
+
         if (songRepository.existsByTitle(requestDTO.getTitle())) {
             throw new RuntimeException("Piosenka o tytule '" + requestDTO.getTitle() + "' już istnieje.");
         }
 
         Song songToSave = songMapper.toEntity(requestDTO);
         Song savedSong = songRepository.save(songToSave);
-
         return songMapper.toResponseDTO(savedSong);
     }
 
     public List<SongResponseDTO> getAllSongs() {
-        return songRepository.findAll().stream()
+        return songRepository.findAll()
+                .stream()
                 .map(songMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -60,14 +57,12 @@ public class SongService {
         return songMapper.toDetailsDTO(song);
     }
 
-
     public SongResponseDTO updateSong(Long id, SongRequestDTO requestDTO) {
         Song existingSong = songRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono piosenki o ID: " + id));
 
-        Song songToUpdate = songMapper.updateEntityFromDTO(existingSong, requestDTO);
-        Song updatedSong = songRepository.save(songToUpdate);
-        return songMapper.toResponseDTO(updatedSong);
+        Song updated = songMapper.updateEntityFromDTO(existingSong, requestDTO);
+        return songMapper.toResponseDTO(songRepository.save(updated));
     }
 
     public void deleteSong(Long id) {
@@ -82,19 +77,12 @@ public class SongService {
             throw new BadRequestException("Parametr wyszukiwania nie może być pusty");
         }
 
-        List<Song> songs;
-
-
-         if (artist != null && !artist.isBlank()) {
-            songs = songRepository.findByTitleContainingIgnoreCaseAndAuthors_NameContainingIgnoreCase(query, artist);
-        }
-
-        else {
-            songs = songRepository.findByTitleContainingIgnoreCase(query);
-        }
+        List<Song> songs = (artist != null && !artist.isBlank())
+                ? songRepository.findByTitleContainingIgnoreCaseAndAuthors_NameContainingIgnoreCase(query, artist)
+                : songRepository.findByTitleContainingIgnoreCase(query);
 
         if (songs.isEmpty()) {
-            throw new ResourceNotFoundException("Nie znaleziono żadnych piosenek dla zapytania: " + query);
+            throw new ResourceNotFoundException("Nie znaleziono żadnych piosenek");
         }
 
         return songs.stream()
@@ -103,12 +91,12 @@ public class SongService {
     }
 
     public List<SongResponseDTO> getSongsByCategory(Long categoryId) {
-        if (!categoryRepository.existsById(categoryId)){
+        if (!categoryRepository.existsById(categoryId)) {
             throw new ResourceNotFoundException("Nie znaleziono kategorii o id: " + categoryId);
         }
 
-        List<Song> songs = songRepository.findByCategories_Id(categoryId);
-        return songs.stream()
+        return songRepository.findByCategories_Id(categoryId)
+                .stream()
                 .map(songMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -120,14 +108,13 @@ public class SongService {
                 (dto.getProposedContent() == null || dto.getProposedContent().isBlank())) {
             throw new BadRequestException("Sugestia musi zawierać treść poprawki lub nowy tekst piosenki.");
         }
+
         if (dto.getSongId() != null) {
             song = songRepository.findById(dto.getSongId())
                     .orElseThrow(() -> new ResourceNotFoundException("Piosenka o ID " + dto.getSongId() + " nie istnieje."));
-        }
-        else if (dto.getYoutubeSongData() != null) {
+        } else if (dto.getYoutubeSongData() != null) {
             song = getOrCreateSong(dto.getYoutubeSongData());
-        }
-        else {
+        } else {
             throw new BadRequestException("Brak identyfikatora lub danych piosenki.");
         }
 
@@ -145,70 +132,63 @@ public class SongService {
         suggestionRepository.save(suggestion);
     }
 
-
     public Song likeYoutubeSong(YoutubeSongDto dto, String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Użytkownik nie znaleziony"));
 
         Song song = getOrCreateSong(dto);
+
         if (!user.getLikedSongs().contains(song)) {
             user.getLikedSongs().add(song);
             userRepository.save(user);
         }
+
         return song;
     }
 
     public SongResponseDTO importFromYoutube(YoutubeSongDto dto) {
-        Song song = getOrCreateSong(dto);
-
-        return songMapper.toResponseDTO(song);
+        return songMapper.toResponseDTO(getOrCreateSong(dto));
     }
 
     public Song getOrCreateSong(YoutubeSongDto dto) {
+
+        if (dto.getVideoId() == null || dto.getVideoId().isBlank()) {
+            throw new BadRequestException("Brak videoId z YouTube");
+        }
+
+        if (dto.getTitle() == null || dto.getTitle().isBlank()) {
+            throw new BadRequestException("Brak tytułu piosenki z YouTube");
+        }
+
         String fullYoutubeUrl = "https://www.youtube.com/watch?v=" + dto.getVideoId();
 
-        Optional<Song> existingSong = songRepository.findByYoutubeUrl(fullYoutubeUrl);
-
-        if (existingSong.isPresent()) {
-            return existingSong.get();
+        Optional<Song> existing = songRepository.findByYoutubeUrl(fullYoutubeUrl);
+        if (existing.isPresent()) {
+            return existing.get();
         }
 
-        Song newSong = new Song();
-        newSong.setTitle(dto.getTitle());
-        newSong.setYoutubeUrl(fullYoutubeUrl);
-        newSong.setThumbnailUrl(dto.getThumbnailUrl());
-        newSong.setLyrics(dto.getLyrics());
+        Song song = new Song();
+        song.setTitle(dto.getTitle());
+        song.setYoutubeUrl(fullYoutubeUrl);
+        song.setThumbnailUrl(dto.getThumbnailUrl());
+        song.setLyrics(dto.getLyrics());
 
-        Category defaultCategory = categoryRepository.findById(3L)
-                .orElseGet(() -> {
-                    return categoryRepository.findAll().stream().findFirst().orElse(null);
-                });
+        Category category = categoryRepository.findById(3L)
+                .orElseGet(() -> categoryRepository.findAll().stream().findFirst().orElse(null));
 
-        if (defaultCategory != null) {
-            if (newSong.getCategories() == null) {
-                newSong.setCategories(new HashSet<>());
-            }
-            newSong.getCategories().add(defaultCategory);
+        if (category != null) {
+            song.getCategories().add(category);
         }
 
-
-        if (dto.getArtist() != null && !dto.getArtist().trim().isEmpty()) {
-            String artistName = dto.getArtist().trim();
-
-            Author author = authorRepository.findByName(artistName)
-                    .orElseGet(() -> {
-                        Author newAuthor = new Author();
-                        newAuthor.setName(artistName);
-                        return authorRepository.save(newAuthor);
-                    });
-
-            if (newSong.getAuthors() == null) {
-                newSong.setAuthors(new HashSet<>());
-            }
-            newSong.getAuthors().add(author);
+        if (dto.getArtist() != null && !dto.getArtist().isBlank()) {
+            Author author = authorRepository.findByName(dto.getArtist().trim())
+                    .orElseGet(() -> authorRepository.save(
+                            Author.builder().name(dto.getArtist().trim()).build()
+                    ));
+            song.getAuthors().add(author);
         }
 
-        return songRepository.save(newSong);
+        return songRepository.save(song);
     }
 
     public Set<Song> getSongsForUser(String username) {
@@ -216,5 +196,4 @@ public class SongService {
                 .orElseThrow(() -> new RuntimeException("Użytkownik nie znaleziony"));
         return user.getLikedSongs();
     }
-
-    }
+}
